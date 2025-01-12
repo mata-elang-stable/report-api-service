@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('sensor_metrics', function (Blueprint $table) {
             $table->timestamp('timestamp');
-            $table->unsignedBigInteger('sensor_id');
+            $table->string('sensor_id');
             $table->foreign('sensor_id')->references('id')->on('sensors')->onDelete('cascade');
             $table->integer('count');
         });

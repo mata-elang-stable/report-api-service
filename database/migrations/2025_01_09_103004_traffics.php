@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('traffics', function (Blueprint $table) {
             $table->dateTime('timestamp');
-            $table->unsignedBigInteger('sensor_id');
+            $table->string('sensor_id');
             $table->foreign('sensor_id')->references('id')->on('sensors')->onDelete('cascade');
             $table->ipAddress('source_ip');
             $table->foreign('source_ip')->references('ip_address')->on('identities')->onDelete('cascade');
