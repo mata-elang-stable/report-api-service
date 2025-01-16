@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('alert_messages', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('classification_id');
-            $table->foreign('classification_id')->references('id')->on('classifications')->onDelete('cascade');
-            $table->string('alert_message');
+        Schema::create('sensors', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('sensor_name');
+            $table->timestamps();
         });
     }
 
@@ -24,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('alert_messages');
+        Schema::dropIfExists('sensors');
     }
 };

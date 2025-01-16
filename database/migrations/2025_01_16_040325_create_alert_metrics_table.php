@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use App\Models\AlertMessage;
 
 return new class extends Migration
 {
@@ -13,11 +14,13 @@ return new class extends Migration
     {
         Schema::create('alert_metrics', function (Blueprint $table) {
             $table->dateTime('timestamp');
-            $table->string('sensor_id');
-            $table->foreign('sensor_id')->references('id')->on('sensors')->onDelete('cascade')->nullable();
-            $table->unsignedBigInteger('alert_id');
-            $table->foreign('alert_id')->references('id')->on('alert_messages')->onDelete('cascade')->nullable();
+            $table->uuid('sensor_id');
+            $table->foreignId('alert_id')->constrained('alert_messages');
             $table->integer('count');
+            $table->timestamps();
+
+            $table->primary(['timestamp', 'sensor_id', 'alert_id']);
+            $table->foreign('sensor_id')->references('id')->on('sensors');
         });
     }
 

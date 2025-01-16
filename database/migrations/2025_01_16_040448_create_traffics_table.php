@@ -12,16 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('traffics', function (Blueprint $table) {
+            $table->id();
             $table->dateTime('timestamp');
-            $table->string('sensor_id');
-            $table->foreign('sensor_id')->references('id')->on('sensors')->onDelete('cascade');
+            $table->uuid('sensor_id');
             $table->ipAddress('source_ip');
-            $table->foreign('source_ip')->references('ip_address')->on('identities')->onDelete('cascade');
             $table->integer('source_port');
             $table->ipAddress('destination_ip');
-            $table->foreign('destination_ip')->references('ip_address')->on('identities')->onDelete('cascade');
             $table->integer('destination_port');
             $table->integer('count');
+            $table->timestamps();
+
+            $table->foreign('sensor_id')->references('id')->on('sensors');
+            $table->foreign('source_ip')->references('ip_address')->on('identities');
+            $table->foreign('destination_ip')->references('ip_address')->on('identities');
         });
     }
 
