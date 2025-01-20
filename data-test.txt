@@ -1,19 +1,21 @@
 [
-      {
+  {
     "event_metrics_count": 1,
     "metrics": [
       {
         "count": 1,
         "snort_dst_address": "172.104.35.109",
+        "snort_dst_country": "Japan",
         "snort_dst_port": 38674,
         "snort_src_address": "45.142.193.76",
+        "snort_src_country": "Germany",
         "snort_src_port": 41751
       }
     ],
     "sensor_id": "personal-vps",
     "snort_classification": "none",
     "snort_message": "(port_scan) TCP portsweep",
-    "snort_priority": 3,
+    "snort_priority": 2,
     "snort_seconds": 1736757236
   },
   {
@@ -22,15 +24,17 @@
       {
         "count": 1,
         "snort_dst_address": "172.104.35.109",
+        "snort_dst_country": "Japan",
         "snort_dst_port": 907,
         "snort_src_address": "79.124.62.122",
+        "snort_src_country": "France",
         "snort_src_port": 0
       }
     ],
     "sensor_id": "personal-vps",
     "snort_classification": "none",
     "snort_message": "(tcp) TCP port 0 traffic",
-    "snort_priority": 3,
+    "snort_priority": 4,
     "snort_seconds": 1736757275
   },
   {
@@ -39,15 +43,19 @@
       {
         "count": 1,
         "snort_dst_address": "79.124.62.122",
+        "snort_dst_country": "France",
         "snort_dst_port": 0,
         "snort_src_address": "172.104.35.109",
+        "snort_src_country": "Japan",
         "snort_src_port": 907
       },
       {
         "count": 1,
         "snort_dst_address": "172.104.35.109",
+        "snort_dst_country": "Japan",
         "snort_dst_port": 907,
         "snort_src_address": "79.124.62.122",
+        "snort_src_country": "France",
         "snort_src_port": 0
       }
     ],
@@ -80,8 +88,10 @@
       {
         "count": 1,
         "snort_dst_address": "172.104.35.109",
+        "snort_dst_country": "Japan",
         "snort_dst_port": 19919,
         "snort_src_address": "79.124.62.126",
+        "snort_src_country": "France",
         "snort_src_port": 0
       }
     ],
@@ -90,5 +100,5 @@
     "snort_message": "PUA-ADWARE Js.Adware.Agent variant redirect attempt",
     "snort_priority": 1,
     "snort_seconds": 1736757356
-  },
+  }
 ]

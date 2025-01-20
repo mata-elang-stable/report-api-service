@@ -15,16 +15,16 @@ return new class extends Migration
             $table->id();
             $table->dateTime('timestamp');
             $table->uuid('sensor_id');
-            $table->ipAddress('source_ip');
-            $table->integer('source_port');
-            $table->ipAddress('destination_ip');
-            $table->integer('destination_port');
+            $table->ipAddress('source_ip')->nullable();
+            $table->integer('source_port')->default(0);
+            $table->ipAddress('destination_ip')->nullable();
+            $table->integer('destination_port')->default(0);
             $table->integer('count');
             $table->timestamps();
 
             $table->foreign('sensor_id')->references('id')->on('sensors');
-            $table->foreign('source_ip')->references('ip_address')->on('identities');
-            $table->foreign('destination_ip')->references('ip_address')->on('identities');
+            $table->foreign('source_ip')->references('ip_address')->on('identities')->nullable();
+            $table->foreign('destination_ip')->references('ip_address')->on('identities')->nullable();
         });
     }
 
