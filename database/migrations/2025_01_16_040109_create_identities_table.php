@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('identities', function (Blueprint $table) {
             $table->ipAddress('ip_address')->primary();
-            $table->string('country_name');
+            $table->string('country_name')->nullable();
             $table->timestamps();
         });
     }
