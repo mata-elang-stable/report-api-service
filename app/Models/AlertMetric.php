@@ -26,6 +26,6 @@ class AlertMetric extends Model
 
     public function sensor()
     {
-        return $this->belongsTo(Sensor::class);
+        return $this->belongsTo(Sensor::class, 'sensor_id', 'id');
     }
 }
