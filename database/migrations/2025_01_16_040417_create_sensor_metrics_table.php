@@ -12,12 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('sensor_metrics', function (Blueprint $table) {
+            $table->id();
             $table->dateTime('timestamp');
             $table->uuid('sensor_id');
             $table->integer('count');
             $table->timestamps();
 
-            $table->primary(['timestamp', 'sensor_id']);
+            $table->unique(['timestamp', 'sensor_id']);
             $table->foreign('sensor_id')->references('id')->on('sensors');
         });
     }

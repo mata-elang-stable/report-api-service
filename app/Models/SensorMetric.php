@@ -9,10 +9,6 @@ class SensorMetric extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = ['timestamp', 'sensor_id'];
-    public $incrementing = false;
-    protected $keyType = 'string';
-
     protected $fillable = [
         'timestamp',
         'sensor_id',

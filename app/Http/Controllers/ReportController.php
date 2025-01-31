@@ -14,7 +14,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\File;
 
 class ReportController extends Controller
 {
@@ -66,33 +65,32 @@ class ReportController extends Controller
                 ]
             );
 
-            $alertMetric = AlertMetric::firstOrCreate(
-                [
-                    'timestamp' => date('Y-m-d H:i:s', $event['snort_seconds']),
-                    'sensor_id' => $sensor->id,
-                    'alert_id' => $alertMessage->id,
-                ],
-                [
-                    'count' => $event['event_metrics_count'],
-                ]
+            $alertMetricAttributes = [
+                'timestamp' => date('Y-m-d H:i:s', $event['snort_seconds']),
+                'sensor_id' => $sensor->id,
+                'alert_id' => $alertMessage->id,
+            ];
+
+            $alertMetric = AlertMetric::incrementOrCreate(
+                $alertMetricAttributes,
+                'count',
+                1,
+                $event['event_metrics_count'],
+                []
                 );
             
-            // Use incrementOrCreate to update the count
             $sensorMetricAttributes = [
                 'timestamp' => date('Y-m-d H:i:s', $event['snort_seconds']),
                 'sensor_id' => $sensor->id,
             ];
 
-            $sensorMetric = SensorMetric::incrementOrCreate($sensorMetricAttributes, 'count', 1, $event['event_metrics_count'], []);
-            // $sensorMetric = SensorMetric::updateOrCreate(
-            //     [
-            //         'timestamp' => date('Y-m-d H:i:s', $event['snort_seconds']),
-            //         'sensor_id' => $sensor->id,
-            //     ],
-            //     [
-            //         'count' => $event['event_metrics_count'],
-            //     ]
-            // );
+            $sensorMetric = SensorMetric::incrementOrCreate(
+                $sensorMetricAttributes, 
+                'count',                 
+                1,                       
+                $event['event_metrics_count'], 
+                []                       
+            );
 
             foreach ($event['metrics'] as $metric) {
                 Log::info('Processing Metric:', ['metric' => $metric]);
@@ -103,19 +101,23 @@ class ReportController extends Controller
                     $srcIpAddress = $this->createOrUpdateIdentity($metric['snort_src_address']);
                     $dstIpAddress = $this->createOrUpdateIdentity($metric['snort_dst_address']);
 
-                    $traffic = Traffic::firstOrCreate([
+                    $traffic = Traffic::incrementOrCreate(
+                     [
                         'timestamp' => date('Y-m-d H:i:s', $event['snort_seconds']),
                         'sensor_id' => $sensor->id,
                         'source_ip' => $srcIpAddress->ip_address,
                         'source_port' => $srcPort,
                         'destination_ip' => $dstIpAddress->ip_address,
                         'destination_port' => $dstPort,
-                        'count' => $count
-                    ]);
+                    ],
+                     'count',
+                     1,
+                     $count,
+                     []);
                 }
 
                 $processedData[] = [
-                        'alert_metric' => [
+                    'alert_metric' => [
                         'timestamp' => $alertMetric->timestamp,
                         'sensor' => [
                             'id' => $sensor->id,
@@ -130,8 +132,21 @@ class ReportController extends Controller
                         ],
                         'count' => $alertMetric->count,
                     ],
-                    // 'sensor_metric' => $sensorMetric,
-                    'traffic' => $traffic,
+                    'sensor_metric' => [
+                        'timestamp' => $sensorMetric->timestamp,
+                        'sensor_id' => $sensorMetric->sensor_id,
+                        'count' => $sensorMetric->count
+                    ],
+                    'traffic' => [
+                        'id' => $traffic->id,
+                        'timestamp' => $traffic->timestamp,
+                        'sensor_id' => $traffic->sensor_id,
+                        'source_ip' => $traffic->source_ip,
+                        'source_port' => $traffic->source_port,
+                        'destination_ip' => $traffic->destination_ip,
+                        'destination_port' => $traffic->destination_port,
+                        'count' => $traffic->count
+                    ],
                 ];
             }
         }
@@ -140,159 +155,274 @@ class ReportController extends Controller
             'message' => 'success',
             'data' => $processedData        
         ], 200);
-    
-        // foreach ($data as $event) {
-    
-        //     $alertMessage = AlertMessage::firstOrCreate(
-        //         [
-        //             'classification_id' => $classification->id,
-        //             'alert_message' => $event['snort_message']
-        //         ]
-        //     );
-    
-        //     $sensorMetric = SensorMetric::firstOrCreate(
-        //         [
-        //             'timestamp' => date('Y-m-d H:i:s', $event['snort_seconds']),
-        //             'sensor_id' => $sensor->id,
-        //         ],
-        //         [
-        //             'count' => $event['event_metrics_count'],
-        //         ]
-        //     );
-    
-        //     $totalEventMetricsCount += $event['event_metrics_count'];
-    
-        //     foreach ($event['metrics'] as $metric) {
-        //         Log::info('Processing Metric:', ['metric' => $metric]);
-    
-        //         $this->createOrUpdateIdentity($metric['snort_src_address'] ?? null, $metric['snort_src_country'] ?? null);
-        //         $this->createOrUpdateIdentity($metric['snort_dst_address'] ?? null, $metric['snort_dst_country'] ?? null);
-    
-        //         $traffic = Traffic::create([
-        //             'timestamp' => date('Y-m-d H:i:s', $event['snort_seconds']),
-        //             'sensor_id' => $sensor->id,
-        //             'source_ip' => !empty($metric['snort_src_address']) ? $metric['snort_src_address'] : null, // Use null instead of empty string
-        //             'source_port' => $metric['snort_src_port'] ?? 0,
-        //             'destination_ip' => !empty($metric['snort_dst_address']) ? $metric['snort_dst_address'] : null, // Use null instead of empty string
-        //             'destination_port' => $metric['snort_dst_port'] ?? 0,
-        //             'count' => $metric['count'],
-        //         ]);
-    
-        //         $alertMetric = AlertMetric::where([
-        //             'timestamp' => date('Y-m-d H:i:s', $event['snort_seconds']),
-        //             'sensor_id' => $sensor->id,
-        //             'alert_id' => $alertMessage->id,
-        //         ])->first();
-    
-        //         if ($alertMetric) {
-        //             $alertMetric->count += $metric['count'];
-        //             $alertMetric->save();
-        //         } else {
-        //             $alertMetric = AlertMetric::create([
-        //                 'timestamp' => date('Y-m-d H:i:s', $event['snort_seconds']),
-        //                 'sensor_id' => $sensor->id,
-        //                 'alert_id' => $alertMessage->id,
-        //                 'count' => $metric['count'],
-        //             ]);
-        //         }
-    
-        //         $eventData = [
-        //             'sensor' => $sensor,
-        //             'priority' => $priority,
-        //             'classification' => $classification,
-        //             'alert_message' => $alertMessage,
-        //             'sensor_metric' => $sensorMetric,
-        //             'alert_metric' => $alertMetric,
-        //             'traffic' => [
-        //                 'timestamp' => $traffic->timestamp,
-        //                 'sensor_id' => $traffic->sensor->sensor_name, 
-        //                 'source' => [
-        //                     'ip_address' => $traffic->source_ip ?? '',
-        //                     'port' => $traffic->source_port,
-        //                     'country_name' => $traffic->sourceIdentity->country_name ?? '',
-        //                 ],
-        //                 'destination' => [
-        //                     'ip_address' => $traffic->destination_ip ?? '',
-        //                     'port' => $traffic->destination_port,
-        //                     'country_name' => $traffic->destinationIdentity->country_name ?? '',
-        //                 ],
-        //                 'count' => $traffic->count,
-        //                 'updated_at' => $traffic->updated_at,
-        //                 'created_at' => $traffic->created_at,
-        //                 'id' => $traffic->id,
-        //             ],
-        //         ];
-    
-        //         $processedData[] = $eventData;
-        //     }
-        // }
-    
-        // return response()->json([
-        //     'success' => true,
-        //     'data' => $processedData,
-        // ], 201);
     }
     
-    public function generateReport(): JsonResponse 
+    public function generateReport()
     {
-        $trafficData = Traffic::with([
-            'sensor.alertMetrics.alertMessage.classification.priority',
-            'sourceIdentity',
-            'destinationIdentity'
-        ])
-        ->orderBy('timestamp', 'desc')
-        ->get();
-    
-        Log::info('First Traffic Record:', [
-            'traffic' => $trafficData->first(),
-            'sensor' => $trafficData->first()->sensor,
-            'alert_metrics' => $trafficData->first()->sensor->alertMetrics,
-            'alert_message' => $trafficData->first()->sensor->alertMetrics->first()?->alertMessage,
-            'classification' => $trafficData->first()->sensor->alertMetrics->first()?->alertMessage?->classification,
-            'priority' => $trafficData->first()->sensor->alertMetrics->first()?->alertMessage?->classification?->priority
-        ]);
-    
-        $processedData = $trafficData->map(function ($traffic) {
-            $alertMetric = $traffic->sensor->alertMetrics->first();
-            
-            // For debugging individual records
-            Log::info('Processing Traffic:', [
-                'traffic_id' => $traffic->id,
-                'sensor_name' => $traffic->sensor->sensor_name,
-                'alert_metrics' => $traffic->sensor->alertMetrics,
-                'alert_message' => $alertMetric?->alertMessage,
-                'classification' => $alertMetric?->alertMessage?->classification,
-                'priority' => $alertMetric?->alertMessage?->classification?->priority
-            ]);
-    
+        $alertMetrics = AlertMetric::with('alertMessage.classification.priority')->get();
+        $sensorMetrics = SensorMetric::with('sensor')->get();
+        $priorities = Priority::all()->pluck('id', 'name')->toArray();
+        $traffics = Traffic::with('sourceIdentity', 'destinationidentity')->get();
+        $sensors = Sensor::all();
+        $totalEvents = 0;
+
+        // Top 10 Priority
+        $priorityCounts = [];
+        foreach($alertMetrics as $alertMetric) {
+            $totalEvents += $alertMetric->count;
+            $priorityName = $alertMetric->alertMessage->classification->priority->name;
+            if (!isset($priorityCounts[$priorityName])) {
+                $priorityCounts[$priorityName] = 0;
+            }
+
+            $priorityCounts[$priorityName] += $alertMetric->count;
+        }
+
+        // Sort priorities by count in descending order and take top 10
+        $priorityCounts = collect($priorityCounts)->sortByDesc(function($count, $priority) {
+            return $count;
+        })->take(10)->toArray();
+
+        // Top 10 Alert
+        $groupedAlertMetrics = $alertMetrics->groupBy(function ($alertMetric) {
+            return $alertMetric->alertMessage->classification->priority->name . '|' .
+                   $alertMetric->alertMessage->classification->classification . '|' .
+                   $alertMetric->alertMessage->alert_message;
+        })->map(function ($group) {
+            $first = $group->first();
             return [
-                'sensor' => $traffic->sensor->sensor_name,
-                'priority' => $alertMetric?->alertMessage?->classification?->priority?->name ?? 'Unknown',
-                'traffic' => [
-                    'timestamp' => $traffic->timestamp,
-                    'sensor_id' => $traffic->sensor->sensor_name,
-                    'source' => [
-                        'ip_address' => $traffic->source_ip === '0.0.0.0' ? '' : $traffic->source_ip,
-                        'port' => $traffic->source_port,
-                        'country_name' => $traffic->sourceIdentity?->country_name ?? '',
-                    ],
-                    'destination' => [
-                        'ip_address' => $traffic->destination_ip === '0.0.0.0' ? '' : $traffic->destination_ip,
-                        'port' => $traffic->destination_port,
-                        'country_name' => $traffic->destinationIdentity?->country_name ?? '',
-                    ],
-                    'count' => $traffic->count,
-                    'updated_at' => $traffic->updated_at,
-                    'created_at' => $traffic->created_at,
-                    'id' => $traffic->id,
-                ]
+                'priority' => $first->alertMessage->classification->priority->name,
+                'classification' => $first->alertMessage->classification->classification,
+                'message' => $first->alertMessage->alert_message,
+                'count' => $group->sum('count'),
             ];
         });
     
-        return response()->json([
-            'total_records' => $trafficData->count(),
-            'data' => $processedData
-        ], 200);
+        // Sort grouped alert metrics by priority and count
+        $sortedAlertMetrics = $groupedAlertMetrics->sort(function($a, $b) use ($priorities) {
+            $priorityA = $priorities[$a['priority']] ?? 999;
+            $priorityB = $priorities[$b['priority']] ?? 999;
+            if ($priorityA === $priorityB) {
+                return $b['count'] <=> $a['count'];
+            }
+            return $priorityA <=> $priorityB;
+        });
+
+        $topAlertData = $sortedAlertMetrics->take(10)->values();
+
+        // Top 10 Source IP
+        $sourceIpCounts = collect($traffics)->groupBy('source_ip')->map(function ($items, $key) {
+            return [
+                'sourceIp' => $key,
+                'count' => $items->sum('count')
+            ];
+        });
+        $topSourceIps = $sourceIpCounts->sortByDesc('count')->take(10)->values();
+
+        // Top 10 Source Country
+        $sourceCountryCounts = collect($traffics)->groupBy(function ($item) {
+            return $item->sourceIdentity->country_name ?? 'Unknown';
+        })->map(function ($items, $key) {
+            return [
+                'country' => $key,
+                'count' => $items->sum('count')
+            ];
+        });
+        $topSourceCountries = $sourceCountryCounts->sortByDesc('count')->take(10)->values();
+        
+        //Top 10 Destination IP
+        $destinationIpCounts = collect($traffics)->groupBy('destination_ip')->map(function ($items, $key) {
+            return [
+                'destinationIp' => $key,
+                'count' => $items->sum('count')
+            ];
+        });
+        $topDestinationIps = $destinationIpCounts->sortByDesc('count')->take(10)->values();
+
+        // Top 10 Destination Country
+        $destinationCountryCounts = collect($traffics)->groupBy(function ($item) {
+            return $item->destinationIdentity->country_name ?? 'Unknown';
+        })->map(function ($items, $key) {
+            return [
+                'country' => $key,
+                'count' => $items->sum('count')
+            ];
+        });
+        $topDestinationCountries = $destinationCountryCounts->sortByDesc('count')->take(10)->values();
+
+        // Aggregate counts by sensor
+        $sensorCounts = $sensorMetrics->groupBy('sensor_id')->map(function ($items, $key) {
+            return [
+                'sensor_id' => $key,
+                'sensor_name' => $items->first()->sensor->sensor_name,
+                'count' => $items->sum('count')
+            ];
+        });
+        $topSensors = $sensorCounts->sortByDesc('count')->take(10)->values();
+
+        // Top 10 Source Port
+        $sourcePortCounts = collect($traffics)->groupBy('source_port')->map(function ($items, $key) {
+            return [
+                'sourcePort' => $key,
+                'count' => $items->sum('count')
+            ];
+        });
+        $topSourcePorts = $sourcePortCounts->sortByDesc('count')->take(10)->values();
+
+        //Top 10 Destination Port
+        $destinationPortCounts = collect($traffics)->groupBy('destination_port')->map(function ($items, $key) {
+            return [
+                'destinationPort' => $key,
+                'count' => $items->sum('count')
+            ];
+        });
+        $topDestinationPorts = $destinationPortCounts->sortByDesc('count')->take(10)->values();
+
+        foreach ($sensors as $sensor) {
+            $sensor->totalEvents = $sensorMetrics->where('sensor_id', $sensor->id)->sum('count');
+            $priorityCountsSensor = [];
+            foreach ($alertMetrics as $alertMetric) {
+                if ($alertMetric->sensor_id === $sensor->id) {
+                    $priorityName = $alertMetric->alertMessage->classification->priority->name;
+                    if (!isset($priorityCountsSensor[$priorityName])) {
+                        $priorityCountsSensor[$priorityName] = 0;
+                    }
+                    $priorityCountsSensor[$priorityName] += $alertMetric->count;
+                }
+            }
+            $sensor->priorityCounts = $priorityCountsSensor;
+            $groupedAlertMetrics = $alertMetrics->where('sensor_id', $sensor->id)->groupBy(function ($alertMetric) {
+                return $alertMetric->alertMessage->classification->priority->name . '|' .
+                       $alertMetric->alertMessage->classification->classification . '|' .
+                       $alertMetric->alertMessage->alert_message;
+            })->map(function ($group) {
+                $first = $group->first();
+                return [
+                    'priority' => $first->alertMessage->classification->priority->name,
+                    'classification' => $first->alertMessage->classification->classification,
+                    'message' => $first->alertMessage->alert_message,
+                    'count' => $group->sum('count'),
+                ];
+            });
+            $sortedAlertMetrics = $groupedAlertMetrics->sort(function($a, $b) use ($priorities) {
+                $priorityA = $priorities[$a['priority']] ?? 999;
+                $priorityB = $priorities[$b['priority']] ?? 999;
+                if ($priorityA === $priorityB) {
+                    return $b['count'] <=> $a['count'];
+                }
+                return $priorityA <=> $priorityB;
+            });
+            $sensor->topAlertData = $sortedAlertMetrics->take(10)->values();
+            $sourceIpCounts = collect($traffics)->where('sensor_id', $sensor->id)->groupBy('source_ip')->map(function ($items, $key) {
+                return [
+                    'sourceIp' => $key,
+                    'count' => $items->sum('count')
+                ];
+            });
+            $sensor->topSourceIps = $sourceIpCounts->sortByDesc('count')->take(10)->values();
+            $sourceCountryCounts = collect($traffics)->where('sensor_id', $sensor->id)->groupBy(function ($item) {
+                return $item->sourceIdentity->country_name ?? 'Unknown';
+            })->map(function ($items, $key) {
+                return [
+                    'country' => $key,
+                    'count' => $items->sum('count')
+                ];
+            });
+            $sensor->topSourceCountries = $sourceCountryCounts->sortByDesc('count')->take(10)->values();
+            $destinationIpCounts = collect($traffics)->where('sensor_id', $sensor->id)->groupBy('destination_ip')->map(function ($items, $key) {
+                return [
+                    'destinationIp' => $key,
+                    'count' => $items->sum('count')
+                ];
+            });
+            $sensor->topDestinationIps = $destinationIpCounts->sortByDesc('count')->take(10)->values();
+            $destinationCountryCounts = collect($traffics)->where('sensor_id', $sensor->id)->groupBy(function ($item) {
+                return $item->destinationIdentity->country_name ?? 'Unknown';
+            })->map(function ($items, $key) {
+                return [
+                    'country' => $key,
+                    'count' => $items->sum('count')
+                ];
+            });
+            $sensor->topDestinationCountries = $destinationCountryCounts->sortByDesc('count')->take(10)->values();
+            $sourcePortCounts = collect($traffics)->where('sensor_id', $sensor->id)->groupBy('source_port')->map(function ($items, $key) {
+                return [
+                    'sourcePort' => $key,
+                    'count' => $items->sum('count')
+                ];
+            });
+            $sensor->topSourcePorts = $sourcePortCounts->sortByDesc('count')->take(10)->values();
+            $destinationPortCounts = collect($traffics)->where('sensor_id', $sensor->id)->groupBy('destination_port')->map(function ($items, $key) {
+                return [
+                    'destinationPort' => $key,
+                    'count' => $items->sum('count')
+                ];
+            });
+            $sensor->topDestinationPorts = $destinationPortCounts->sortByDesc('count')->take(10)->values();
+        };
+
+        // dd($sensors);
+
+        return view('reports.alert_report', [
+            'alertMetrics' => $alertMetrics,
+            'totalEvents' => $totalEvents,
+            'priorityCounts' => $priorityCounts,
+            'topAlertData' => $topAlertData,
+            'topSourceIps' => $topSourceIps,
+            'topSourceCountries' => $topSourceCountries,
+            'topDestinationIps' => $topDestinationIps,
+            'topDestinationCountries' => $topDestinationCountries,
+            'topSensors' => $topSensors,
+            'topSourcePorts' => $topSourcePorts,
+            'topDestinationPorts' => $topDestinationPorts,
+            'sensors' => $sensors,
+        ]);
+
+        // $css = File::get(public_path('css/report-style.css'));
+
+        // $pdf = PDF::loadView('reports.alert_report', [
+        //     'css' => $css,
+        //     'alertMetrics' => $alertMetrics,
+        //     'totalEvents' => $totalEvents,
+        //     'priorityCounts' => $priorityCounts,
+        //     'topAlertData' => $topAlertData,
+        //     'topSourceIps' => $topSourceIps,
+        //     'topSourceCountries' => $topSourceCountries,
+        //     'topDestinationIps' => $topDestinationIps,
+        //     'topDestinationCountries' => $topDestinationCountries,
+        //     'topSensors' => $topSensors,
+        //     'topSourcePorts' => $topSourcePorts,
+        //     'topDestinationPorts' => $topDestinationPorts,
+        //     'sensors' => $sensors,
+        // ]);
+
+        // $pdf->setPaper('A4', 'portrait');
+        // $pdf->setOptions([
+        //     'isHtml5ParserEnabled' => true,
+        //     'isPhpEnabled' => true,
+        //     'isRemoteEnabled' => true,
+        //     'dpi' => 150,
+        //     'defaultFont' => 'sans-serif'
+        // ]);
+
+        // return $pdf->download('alert_report.pdf');
+
+        // dd($priorityCounts);
+
+        // return response()->json([
+        //     'data' => $sensorMetrics,
+        //     'alertMetrics' => $alertMetrics,
+        //     'totalEvents' => $totalEvents,
+        //     'priorityCounts' => $priorityCounts,
+        //     'topAlertData' => $topAlertData,
+        //     'topSourceIps' => $topSourceIps,
+        //     'topSourceCountries' => $topSourceCountries,
+        //     'topDestinationIps' => $topDestinationIps,
+        //     'topDestinationCountries' => $topDestinationCountries,
+        //     'topSensors' => $topSensors,
+        //     'topSourcePorts' => $topSourcePorts,
+        //     'topDestinationPorts' => $topDestinationPorts,
+        // ]);
     }
 
     
