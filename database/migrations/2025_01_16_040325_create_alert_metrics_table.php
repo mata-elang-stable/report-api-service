@@ -13,13 +13,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('alert_metrics', function (Blueprint $table) {
+            $table->id();
             $table->dateTime('timestamp');
             $table->uuid('sensor_id');
             $table->foreignId('alert_id')->constrained('alert_messages');
             $table->integer('count');
             $table->timestamps();
 
-            $table->primary(['timestamp', 'sensor_id', 'alert_id']);
+            $table->unique(['timestamp', 'sensor_id', 'alert_id']);
             $table->foreign('sensor_id')->references('id')->on('sensors');
         });
     }

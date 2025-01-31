@@ -13,13 +13,13 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             PrioritySeeder::class,
-            ClassificationSeeder::class,
-            IdentitySeeder::class,
-            SensorSeeder::class,
-            AlertMessageSeeder::class,
-            AlertMetricSeeder::class,
-            SensorMetricSeeder::class,
-            TrafficSeeder::class,
+            // ClassificationSeeder::class,
+            // IdentitySeeder::class,
+            // SensorSeeder::class,
+            // AlertMessageSeeder::class,
+            // AlertMetricSeeder::class,
+            // SensorMetricSeeder::class,
+            // TrafficSeeder::class,
         ]);
     }
 }

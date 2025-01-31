@@ -8,9 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class AlertMetric extends Model
 {
     use HasFactory;
-    protected $primaryKey = ['timestamp', 'sensor_id', 'alert_id'];
-    public $incrementing = false;
-    protected $keyType = 'string';
 
     protected $fillable = [
         'timestamp',
@@ -26,6 +23,6 @@ class AlertMetric extends Model
 
     public function sensor()
     {
-        return $this->belongsTo(Sensor::class);
+        return $this->belongsTo(Sensor::class, 'sensor_id', 'id');
     }
 }

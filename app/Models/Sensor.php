@@ -19,7 +19,7 @@ class Sensor extends Model
 
     public function alertMetrics()
     {
-        return $this->hasMany(AlertMetric::class);
+        return $this->hasMany(AlertMetric::class, 'sensor_id', 'id');
     }
 
     public function traffic()
