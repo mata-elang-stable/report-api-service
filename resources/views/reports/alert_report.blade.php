@@ -66,7 +66,7 @@
 
         <div class="bottom-grid">
             <div class="box source-ip-box">
-                <h3>Top 10 Source IP <span class="subtitle">(IP and Count)</span></h3>
+                <h3>Top 10 Source IP</h3>
                 <div class="table-container">
                     <table class="ip-table">
                         <thead>
@@ -111,7 +111,7 @@
 
         <div class="bottom-grid">
             <div class="box source-ip-box">
-                <h3>Top 10 Destination IP <span class="subtitle">(IP and Count)</span></h3>
+                <h3>Top 10 Destination IP</h3>
                 <div class="table-container">
                     <table class="ip-table">
                         <thead>
@@ -158,7 +158,6 @@
             <!-- Top Sensor Box -->
             <div class="box sensor-box">
                 <h3>Top Sensor</h3>
-                <p class="subtitle">Sensor Id, Sensor name, Count</p>
                 <div class="table-container">
                     <table class="sensor-table">
                         <thead>
@@ -186,7 +185,6 @@
                 <!-- Source Port Box -->
                 <div class="box port-box">
                     <h3>Top 10 Source Port</h3>
-                    <p class="subtitle">Port, Count</p>
                     <div class="table-container">
                         <table class="port-table">
                             <thead>
@@ -210,7 +208,6 @@
                 <!-- Destination Port Box -->
                 <div class="box port-box">
                     <h3>Top 10 Destination Port</h3>
-                    <p class="subtitle">Port, Count</p>
                     <div class="table-container">
                         <table class="port-table">
                             <thead>
@@ -233,6 +230,7 @@
             </div>
         </div>
     </div>
+    <br />
     @foreach ($sensors as $sensor)
     <div class="page-break">
     <div class="header">
