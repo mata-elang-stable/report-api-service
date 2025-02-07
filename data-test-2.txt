@@ -1,0 +1,723 @@
+{
+    "alertMetrics": [
+        {
+            "id": 1,
+            "timestamp": "2025-01-20 14:00:00",
+            "sensor_id": "5ca4046f-60ab-4f8f-88b8-b9a88b6346f2",
+            "alert_id": 1,
+            "count": 12,
+            "created_at": "2025-01-30T01:23:41.000000Z",
+            "updated_at": "2025-01-30T01:41:34.000000Z",
+            "alert_message": {
+                "id": 1,
+                "classification_id": 1,
+                "alert_message": "(arp_spoof) unicast ARP request",
+                "created_at": "2025-01-30T01:23:41.000000Z",
+                "updated_at": "2025-01-30T01:23:41.000000Z",
+                "classification": {
+                    "id": 1,
+                    "priority_id": 1,
+                    "classification": "none",
+                    "created_at": "2025-01-30T01:23:41.000000Z",
+                    "updated_at": "2025-01-30T01:23:41.000000Z",
+                    "priority": {
+                        "id": 1,
+                        "name": "High",
+                        "created_at": "2025-01-30T01:22:25.000000Z",
+                        "updated_at": "2025-01-30T01:22:25.000000Z"
+                    }
+                }
+            }
+        },
+        {
+            "id": 2,
+            "timestamp": "2025-01-21 03:00:00",
+            "sensor_id": "73ce5853-8b48-4314-8aa4-acc9a00c61cc",
+            "alert_id": 2,
+            "count": 261,
+            "created_at": "2025-01-30T01:23:41.000000Z",
+            "updated_at": "2025-01-30T01:41:34.000000Z",
+            "alert_message": {
+                "id": 2,
+                "classification_id": 2,
+                "alert_message": "(stream_tcp) reset outside window",
+                "created_at": "2025-01-30T01:23:41.000000Z",
+                "updated_at": "2025-01-30T01:23:41.000000Z",
+                "classification": {
+                    "id": 2,
+                    "priority_id": 3,
+                    "classification": "none",
+                    "created_at": "2025-01-30T01:23:41.000000Z",
+                    "updated_at": "2025-01-30T01:23:41.000000Z",
+                    "priority": {
+                        "id": 3,
+                        "name": "Low",
+                        "created_at": "2025-01-30T01:22:25.000000Z",
+                        "updated_at": "2025-01-30T01:22:25.000000Z"
+                    }
+                }
+            }
+        }
+    ],
+    "totalEvents": 407,
+    "priorityCounts": {
+        "Low": 314,
+        "Informational": 55,
+        "High": 33,
+        "Medium": 5
+    },
+    "topAlertData": [
+        {
+            "priority": "High",
+            "classification": "none",
+            "message": "(arp_spoof) unicast ARP request",
+            "count": 22
+        },
+        {
+            "priority": "High",
+            "classification": "aliquam",
+            "message": "Rerum et vel amet reprehenderit sed dolorem quisquam eos.",
+            "count": 7
+        },
+        {
+            "priority": "High",
+            "classification": "aliquam",
+            "message": "Eos eligendi aliquid similique quas quam.",
+            "count": 3
+        },
+        {
+            "priority": "High",
+            "classification": "aliquam",
+            "message": "Dolor magnam recusandae ipsum nulla.",
+            "count": 1
+        },
+        {
+            "priority": "Medium",
+            "classification": "perferendis",
+            "message": "Rerum voluptatum in sit.",
+            "count": 5
+        },
+        {
+            "priority": "Low",
+            "classification": "none",
+            "message": "(stream_tcp) reset outside window",
+            "count": 267
+        },
+        {
+            "priority": "Low",
+            "classification": "none",
+            "message": "(arp_spoof) unicast ARP request",
+            "count": 24
+        },
+        {
+            "priority": "Low",
+            "classification": "none",
+            "message": "(tcp) TCP port 0 traffic",
+            "count": 22
+        },
+        {
+            "priority": "Low",
+            "classification": "odit",
+            "message": "Praesentium et cupiditate aspernatur illum odit explicabo.",
+            "count": 1
+        },
+        {
+            "priority": "Informational",
+            "classification": "none",
+            "message": "Quis eveniet doloribus repellendus dolores dolores vel.",
+            "count": 18
+        }
+    ],
+    "topSourceIps": [
+        {
+            "sourceIp": "2604:a880:2:d1::2265:2001",
+            "count": 84
+        },
+        {
+            "sourceIp": "2600:3c01::f03c:95ff:fea8:f743",
+            "count": 75
+        },
+        {
+            "sourceIp": "214.13.45.69",
+            "count": 17
+        },
+        {
+            "sourceIp": "199.43.109.175",
+            "count": 10
+        },
+        {
+            "sourceIp": "2400:8901:e001:340::1",
+            "count": 9
+        },
+        {
+            "sourceIp": "177.151.146.46",
+            "count": 9
+        },
+        {
+            "sourceIp": "172.104.35.109",
+            "count": 6
+        },
+        {
+            "sourceIp": "155.240.208.50",
+            "count": 4
+        },
+        {
+            "sourceIp": "113.25.47.217",
+            "count": 4
+        },
+        {
+            "sourceIp": "2600:3c00::f03c:95ff:fe6e:f224",
+            "count": 3
+        }
+    ],
+    "topSourceCountries": [
+        {
+            "country": "Belgium",
+            "count": 87
+        },
+        {
+            "country": "Somalia",
+            "count": 75
+        },
+        {
+            "country": "Lao People's Democratic Republic",
+            "count": 17
+        },
+        {
+            "country": "Saint Martin",
+            "count": 10
+        },
+        {
+            "country": "Mauritania",
+            "count": 9
+        },
+        {
+            "country": "Ecuador",
+            "count": 9
+        },
+        {
+            "country": "Oman",
+            "count": 7
+        },
+        {
+            "country": "Venezuela",
+            "count": 6
+        },
+        {
+            "country": "Equatorial Guinea",
+            "count": 4
+        },
+        {
+            "country": "Malawi",
+            "count": 3
+        }
+    ],
+    "topDestinationIps": [
+        {
+            "destinationIp": "2400:8901:e001:340::1",
+            "count": 156
+        },
+        {
+            "destinationIp": "113.25.47.217",
+            "count": 12
+        },
+        {
+            "destinationIp": "177.151.146.46",
+            "count": 11
+        },
+        {
+            "destinationIp": "172.104.35.109",
+            "count": 9
+        },
+        {
+            "destinationIp": "189.44.202.96",
+            "count": 9
+        },
+        {
+            "destinationIp": "79.124.62.134",
+            "count": 7
+        },
+        {
+            "destinationIp": "2600:3c00::f03c:95ff:fe6e:f224",
+            "count": 7
+        },
+        {
+            "destinationIp": "49.230.27.148",
+            "count": 7
+        },
+        {
+            "destinationIp": "113.121.142.15",
+            "count": 6
+        },
+        {
+            "destinationIp": "79.124.62.126",
+            "count": 3
+        }
+    ],
+    "topDestinationCountries": [
+        {
+            "country": "Mauritania",
+            "count": 156
+        },
+        {
+            "country": "Oman",
+            "count": 19
+        },
+        {
+            "country": "Ecuador",
+            "count": 11
+        },
+        {
+            "country": "Venezuela",
+            "count": 9
+        },
+        {
+            "country": "Barbados",
+            "count": 9
+        },
+        {
+            "country": "Malawi",
+            "count": 7
+        },
+        {
+            "country": "Guadeloupe",
+            "count": 7
+        },
+        {
+            "country": "Seychelles",
+            "count": 6
+        },
+        {
+            "country": "Belgium",
+            "count": 3
+        },
+        {
+            "country": "Equatorial Guinea",
+            "count": 3
+        }
+    ],
+    "topSensors": [
+        {
+            "sensor_id": "73ce5853-8b48-4314-8aa4-acc9a00c61cc",
+            "sensor_name": "sensor-edge.server.fadhilyori.my.id",
+            "count": 264
+        },
+        {
+            "sensor_id": "5ca4046f-60ab-4f8f-88b8-b9a88b6346f2",
+            "sensor_name": "personal-vps",
+            "count": 54
+        },
+        {
+            "sensor_id": "fc8393f3-37d2-49e8-97fd-bd506d48604f",
+            "sensor_name": "totam",
+            "count": 6
+        },
+        {
+            "sensor_id": "0a67cd4b-ca4e-471b-8ee7-06263e48f39d",
+            "sensor_name": "quam",
+            "count": 5
+        },
+        {
+            "sensor_id": "464bab3f-5b52-4ccf-9bfc-831a12d23a7e",
+            "sensor_name": "ea",
+            "count": 4
+        },
+        {
+            "sensor_id": "4a6e74a2-5c70-4e14-95e0-e416d2d27e80",
+            "sensor_name": "aut",
+            "count": 1
+        },
+        {
+            "sensor_id": "992cce58-f76f-42b7-9b89-a1e3d2bae68d",
+            "sensor_name": "tempora",
+            "count": 1
+        }
+    ],
+    "topSourcePorts": [
+        {
+            "sourcePort": 59148,
+            "count": 12
+        },
+        {
+            "sourcePort": 33070,
+            "count": 12
+        },
+        {
+            "sourcePort": 33120,
+            "count": 12
+        },
+        {
+            "sourcePort": 33130,
+            "count": 12
+        },
+        {
+            "sourcePort": 59072,
+            "count": 9
+        },
+        {
+            "sourcePort": 59078,
+            "count": 9
+        },
+        {
+            "sourcePort": 59090,
+            "count": 9
+        },
+        {
+            "sourcePort": 59098,
+            "count": 9
+        },
+        {
+            "sourcePort": 59128,
+            "count": 9
+        },
+        {
+            "sourcePort": 59156,
+            "count": 9
+        }
+    ],
+    "topDestinationPorts": [
+        {
+            "destinationPort": 443,
+            "count": 156
+        },
+        {
+            "destinationPort": 25837,
+            "count": 9
+        },
+        {
+            "destinationPort": 11886,
+            "count": 9
+        },
+        {
+            "destinationPort": 62898,
+            "count": 7
+        },
+        {
+            "destinationPort": 41287,
+            "count": 7
+        },
+        {
+            "destinationPort": 9497,
+            "count": 7
+        },
+        {
+            "destinationPort": 0,
+            "count": 6
+        },
+        {
+            "destinationPort": 63299,
+            "count": 6
+        },
+        {
+            "destinationPort": 33261,
+            "count": 4
+        },
+        {
+            "destinationPort": 18454,
+            "count": 4
+        }
+    ],
+    "sensors": [
+        {
+            "id": "5ca4046f-60ab-4f8f-88b8-b9a88b6346f2",
+            "sensor_name": "personal-vps",
+            "created_at": "2025-01-30T01:23:41.000000Z",
+            "updated_at": "2025-01-30T01:23:41.000000Z",
+            "totalEvents": 54,
+            "priorityCounts": {
+                "High": 12,
+                "Low": 28,
+                "Informational": 6
+            },
+            "topAlertData": [
+                {
+                    "priority": "High",
+                    "classification": "none",
+                    "message": "(arp_spoof) unicast ARP request",
+                    "count": 12
+                },
+                {
+                    "priority": "Low",
+                    "classification": "none",
+                    "message": "(tcp) TCP port 0 traffic",
+                    "count": 22
+                },
+                {
+                    "priority": "Low",
+                    "classification": "none",
+                    "message": "(arp_spoof) unicast ARP request",
+                    "count": 6
+                },
+                {
+                    "priority": "Informational",
+                    "classification": "none",
+                    "message": "(stream_tcp) TCP timestamp is missing",
+                    "count": 6
+                }
+            ],
+            "topSourceIps": [
+                {
+                    "sourceIp": "172.104.35.109",
+                    "count": 6
+                },
+                {
+                    "sourceIp": "79.124.62.134",
+                    "count": 3
+                },
+                {
+                    "sourceIp": "79.124.62.126",
+                    "count": 3
+                },
+                {
+                    "sourceIp": "103.246.244.102",
+                    "count": 3
+                }
+            ],
+            "topSourceCountries": [
+                {
+                    "country": "Venezuela",
+                    "count": 6
+                },
+                {
+                    "country": "Oman",
+                    "count": 3
+                },
+                {
+                    "country": "Belgium",
+                    "count": 3
+                },
+                {
+                    "country": "Fiji",
+                    "count": 3
+                }
+            ],
+            "topDestinationIps": [
+                {
+                    "destinationIp": "172.104.35.109",
+                    "count": 9
+                },
+                {
+                    "destinationIp": "79.124.62.134",
+                    "count": 3
+                },
+                {
+                    "destinationIp": "79.124.62.126",
+                    "count": 3
+                }
+            ],
+            "topDestinationCountries": [
+                {
+                    "country": "Venezuela",
+                    "count": 9
+                },
+                {
+                    "country": "Oman",
+                    "count": 3
+                },
+                {
+                    "country": "Belgium",
+                    "count": 3
+                }
+            ],
+            "topSourcePorts": [
+                {
+                    "sourcePort": 0,
+                    "count": 6
+                },
+                {
+                    "sourcePort": 2522,
+                    "count": 3
+                },
+                {
+                    "sourcePort": 30419,
+                    "count": 3
+                },
+                {
+                    "sourcePort": 46176,
+                    "count": 3
+                }
+            ],
+            "topDestinationPorts": [
+                {
+                    "destinationPort": 0,
+                    "count": 6
+                },
+                {
+                    "destinationPort": 2522,
+                    "count": 3
+                },
+                {
+                    "destinationPort": 30419,
+                    "count": 3
+                },
+                {
+                    "destinationPort": 22,
+                    "count": 3
+                }
+            ]
+        },
+        {
+            "id": "73ce5853-8b48-4314-8aa4-acc9a00c61cc",
+            "sensor_name": "sensor-edge.server.fadhilyori.my.id",
+            "created_at": "2025-01-30T01:23:41.000000Z",
+            "updated_at": "2025-01-30T01:23:41.000000Z",
+            "totalEvents": 264,
+            "priorityCounts": {
+                "Low": 271,
+                "High": 7
+            },
+            "topAlertData": [
+                {
+                    "priority": "High",
+                    "classification": "aliquam",
+                    "message": "Rerum et vel amet reprehenderit sed dolorem quisquam eos.",
+                    "count": 7
+                },
+                {
+                    "priority": "Low",
+                    "classification": "none",
+                    "message": "(stream_tcp) reset outside window",
+                    "count": 261
+                },
+                {
+                    "priority": "Low",
+                    "classification": "none",
+                    "message": "(arp_spoof) unicast ARP request",
+                    "count": 9
+                },
+                {
+                    "priority": "Low",
+                    "classification": "odit",
+                    "message": "Praesentium et cupiditate aspernatur illum odit explicabo.",
+                    "count": 1
+                }
+            ],
+            "topSourceIps": [
+                {
+                    "sourceIp": "2604:a880:2:d1::2265:2001",
+                    "count": 84
+                },
+                {
+                    "sourceIp": "2600:3c01::f03c:95ff:fea8:f743",
+                    "count": 69
+                },
+                {
+                    "sourceIp": "2600:3c00::f03c:95ff:fe6e:f224",
+                    "count": 3
+                }
+            ],
+            "topSourceCountries": [
+                {
+                    "country": "Belgium",
+                    "count": 84
+                },
+                {
+                    "country": "Somalia",
+                    "count": 69
+                },
+                {
+                    "country": "Malawi",
+                    "count": 3
+                }
+            ],
+            "topDestinationIps": [
+                {
+                    "destinationIp": "2400:8901:e001:340::1",
+                    "count": 156
+                }
+            ],
+            "topDestinationCountries": [
+                {
+                    "country": "Mauritania",
+                    "count": 156
+                }
+            ],
+            "topSourcePorts": [
+                {
+                    "sourcePort": 59148,
+                    "count": 12
+                },
+                {
+                    "sourcePort": 33070,
+                    "count": 12
+                },
+                {
+                    "sourcePort": 33120,
+                    "count": 12
+                },
+                {
+                    "sourcePort": 33130,
+                    "count": 12
+                },
+                {
+                    "sourcePort": 59072,
+                    "count": 9
+                },
+                {
+                    "sourcePort": 59078,
+                    "count": 9
+                },
+                {
+                    "sourcePort": 59090,
+                    "count": 9
+                },
+                {
+                    "sourcePort": 59098,
+                    "count": 9
+                },
+                {
+                    "sourcePort": 59128,
+                    "count": 9
+                },
+                {
+                    "sourcePort": 59156,
+                    "count": 9
+                }
+            ],
+            "topDestinationPorts": [
+                {
+                    "destinationPort": 443,
+                    "count": 156
+                }
+            ]
+        }
+    ]
+}
+
+
+{
+    "message": "success",
+    "data": {
+        "template_id": "alert_report",
+        "data": {
+            "sensors": [
+                {
+                    "id": "ec21e227-7b2f-4eda-ad55-668fbff4eef6",
+                    "created_at": "2025-02-04T16:28:42.000000Z",
+                    "updated_at": "2025-02-04T16:28:42.000000Z",
+                    "sensor_name": "eos",
+                    "totalEvents": 0,
+                    "topAlertData": [],
+                    "topSourceIps": [],
+                    "priorityCounts": [],
+                    "topSourcePorts": [],
+                    "topDestinationIps": [],
+                    "topSourceCountries": [],
+                    "topDestinationPorts": [],
+                    "topDestinationCountries": []
+                }
+            ],
+            "topSensors": [],
+            "totalEvents": 0,
+            "alertMetrics": [],
+            "topAlertData": [],
+            "topSourceIps": [],
+            "priorityCounts": [],
+            "topSourcePorts": [],
+            "topDestinationIps": [],
+            "topSourceCountries": [],
+            "topDestinationPorts": [],
+            "topDestinationCountries": []
+        }
+    }
+}

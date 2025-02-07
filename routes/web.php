@@ -14,3 +14,7 @@ Route::middleware([
 Route::post('/events', [ReportController::class, 'getReport']);
 
 Route::get('/generate-report', [ReportController::class, 'generateReport'])->name('generate.report');
+
+Route::get('/dispatch-report', [ReportController::class, 'dispatchReportJob']);
+
+Route::get('/get-template/{id}', [ReportController::class, 'getReportTemplate']);

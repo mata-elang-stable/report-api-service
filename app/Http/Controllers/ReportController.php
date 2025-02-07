@@ -7,9 +7,11 @@ use App\Models\AlertMetric;
 use App\Models\Classification;
 use App\Models\Identity;
 use App\Models\Priority;
+use App\Models\Report;
 use App\Models\Sensor;
 use App\Models\SensorMetric;
 use App\Models\Traffic;
+use App\Jobs\GenerateReport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -35,7 +37,7 @@ class ReportController extends Controller
         $processedData = [];
         foreach ($data as $event) {
             if (!isset(
-                $event['sensor_id'], 
+                $event['sensor_id'],
                 $event['snort_priority'], $event['snort_classification'], $event['snort_message'], $event['snort_seconds'], $event['metrics'])) {
                 Log::error('Missing required event keys', ['event' => $event]);
                 continue; // Skip this event if required keys are missing
@@ -78,18 +80,18 @@ class ReportController extends Controller
                 $event['event_metrics_count'],
                 []
                 );
-            
+
             $sensorMetricAttributes = [
                 'timestamp' => date('Y-m-d H:i:s', $event['snort_seconds']),
                 'sensor_id' => $sensor->id,
             ];
 
             $sensorMetric = SensorMetric::incrementOrCreate(
-                $sensorMetricAttributes, 
-                'count',                 
-                1,                       
-                $event['event_metrics_count'], 
-                []                       
+                $sensorMetricAttributes,
+                'count',
+                1,
+                $event['event_metrics_count'],
+                []
             );
 
             foreach ($event['metrics'] as $metric) {
@@ -97,7 +99,7 @@ class ReportController extends Controller
 
                 foreach ($metric['snort_dst_src_port'] as $port => $count) {
                     list($dstPort, $srcPort) = explode(':', $port);
-                    
+
                     $srcIpAddress = $this->createOrUpdateIdentity($metric['snort_src_address']);
                     $dstIpAddress = $this->createOrUpdateIdentity($metric['snort_dst_address']);
 
@@ -153,10 +155,15 @@ class ReportController extends Controller
 
         return response()->json([
             'message' => 'success',
-            'data' => $processedData        
+            'data' => $processedData
         ], 200);
     }
-    
+
+    public function dispatchReportJob() {
+        GenerateReport::dispatch();
+        return response()->json(['message' => 'success'], 200);
+    }
+
     public function generateReport()
     {
         $alertMetrics = AlertMetric::with('alertMessage.classification.priority')->get();
@@ -197,7 +204,7 @@ class ReportController extends Controller
                 'count' => $group->sum('count'),
             ];
         });
-    
+
         // Sort grouped alert metrics by priority and count
         $sortedAlertMetrics = $groupedAlertMetrics->sort(function($a, $b) use ($priorities) {
             $priorityA = $priorities[$a['priority']] ?? 999;
@@ -229,7 +236,7 @@ class ReportController extends Controller
             ];
         });
         $topSourceCountries = $sourceCountryCounts->sortByDesc('count')->take(10)->values();
-        
+
         //Top 10 Destination IP
         $destinationIpCounts = collect($traffics)->groupBy('destination_ip')->map(function ($items, $key) {
             return [
@@ -361,9 +368,7 @@ class ReportController extends Controller
             $sensor->topDestinationPorts = $destinationPortCounts->sortByDesc('count')->take(10)->values();
         };
 
-        // dd($sensors);
-
-        return view('reports.alert_report', [
+        $data = [
             'alertMetrics' => $alertMetrics,
             'totalEvents' => $totalEvents,
             'priorityCounts' => $priorityCounts,
@@ -376,7 +381,29 @@ class ReportController extends Controller
             'topSourcePorts' => $topSourcePorts,
             'topDestinationPorts' => $topDestinationPorts,
             'sensors' => $sensors,
+        ];
+
+        Report::create([
+            'template_id' => 'asdasdasd',
+            'data' => $data,
         ]);
+
+        // dd($sensors);
+
+        // return view('reports.alert_report', [
+        //     'alertMetrics' => $alertMetrics,
+        //     'totalEvents' => $totalEvents,
+        //     'priorityCounts' => $priorityCounts,
+        //     'topAlertData' => $topAlertData,
+        //     'topSourceIps' => $topSourceIps,
+        //     'topSourceCountries' => $topSourceCountries,
+        //     'topDestinationIps' => $topDestinationIps,
+        //     'topDestinationCountries' => $topDestinationCountries,
+        //     'topSensors' => $topSensors,
+        //     'topSourcePorts' => $topSourcePorts,
+        //     'topDestinationPorts' => $topDestinationPorts,
+        //     'sensors' => $sensors,
+        // ]);
 
         // $css = File::get(public_path('css/report-style.css'));
 
@@ -409,27 +436,31 @@ class ReportController extends Controller
 
         // dd($priorityCounts);
 
-        // return response()->json([
-        //     'data' => $sensorMetrics,
-        //     'alertMetrics' => $alertMetrics,
-        //     'totalEvents' => $totalEvents,
-        //     'priorityCounts' => $priorityCounts,
-        //     'topAlertData' => $topAlertData,
-        //     'topSourceIps' => $topSourceIps,
-        //     'topSourceCountries' => $topSourceCountries,
-        //     'topDestinationIps' => $topDestinationIps,
-        //     'topDestinationCountries' => $topDestinationCountries,
-        //     'topSensors' => $topSensors,
-        //     'topSourcePorts' => $topSourcePorts,
-        //     'topDestinationPorts' => $topDestinationPorts,
-        // ]);
+        return response()->json([
+            'message' => 'success',
+            'data' => json_encode($data)
+        ], 200);
     }
 
-    
+    public function getReportTemplate($id) {
+        $report = Report::find($id);
+
+        if (!$report) {
+            return response()->json(['message' => 'Report not found'], 404);
+        }
+
+        return response()->json([
+            'message' => 'success',
+            'data' => [
+                'template_id' => $report->template_id,
+                'data' => $report->data
+            ]
+        ], 200);
+    }
+
     private function createOrUpdateIdentity($ipAddress): Identity
     {
         if (!empty($ipAddress)) {
-            // var_dump($ipAddress);
             $identity = Identity::firstOrCreate(
                 ['ip_address' => $ipAddress],
                 [
