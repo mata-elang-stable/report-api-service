@@ -11,11 +11,11 @@ use App\Models\Report;
 use App\Models\Sensor;
 use App\Models\SensorMetric;
 use App\Models\Traffic;
-use App\Jobs\GenerateReport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use PDF;
 
 class ReportController extends Controller
 {
@@ -157,11 +157,6 @@ class ReportController extends Controller
             'message' => 'success',
             'data' => $processedData
         ], 200);
-    }
-
-    public function dispatchReportJob() {
-        GenerateReport::dispatch();
-        return response()->json(['message' => 'success'], 200);
     }
 
     public function generateReport()
@@ -442,6 +437,35 @@ class ReportController extends Controller
         ], 200);
     }
 
+    public function downloadReport($id)
+    {
+        $report = Report::find($id);
+
+        if (!$report) {
+            return response()->json(['message' => 'Report not found'], 404);
+        }
+
+        // Check if $report->data is already an array
+        $data = is_array($report->data) ? $report->data : json_decode($report->data, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return response()->json(['message' => 'Invalid report data'], 400);
+        }
+
+        // dd($data);
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.alert_report', $data);
+
+        return $pdf->download('report_' . $report->id . '.pdf');
+    }
+
+    public function getAllReports()
+    {
+        $reports = Report::all();
+
+        return view('dashboard', compact('reports'));
+    }
+
     public function getReportTemplate($id) {
         $report = Report::find($id);
 
@@ -454,7 +478,8 @@ class ReportController extends Controller
             'data' => [
                 'template_id' => $report->template_id,
                 'data' => $report->data
-            ]
+            ],
+            'created_at' => $report->created_at,
         ], 200);
     }
 

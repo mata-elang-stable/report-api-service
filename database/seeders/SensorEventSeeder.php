@@ -13,7 +13,7 @@ use App\Models\Traffic;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
-use Log;
+use Faker\Factory as Faker;
 
 class SensorEventSeeder extends Seeder
 {
@@ -22,128 +22,49 @@ class SensorEventSeeder extends Seeder
      */
     public function run(): void
     {
+        $faker = Faker::create();
 
-        // Initialize start time with current month
-        $currentTime = Carbon::now()->startOfMonth()->timestamp;
-        $intervalRangeStart = 0;
-        $intervalRangeEnd = 3 * 60 * 60; // 1 hours
-        $step = 1;
+        // Define the start and end timestamps
+        $startTime = Carbon::now()->subMonths(3)->endOfMonth()->startOfDay()->timestamp;
+        $endTime = Carbon::now()->timestamp;
 
-        $data = [
-            [
-                'event_metrics_count' => 2,
-                'sensor_id' => 'sensor-edge.server.fadhilyori.my.id',
-                'snort_priority' => 'Low',
-                'snort_classification' => 'none',
-                'snort_message' => '(stream_tcp) reset outside window',
-                'snort_protocol' => 'TCP',
-                'snort_seconds' => 1737428400,
-                'metrics' => [
-                    [
-                        'count' => 1,
-                        'snort_dst_address' => '192.168.0.100',
-                        'snort_src_address' => '192.168.0.101',
-                        'snort_dst_src_port' => [
-                            '443:33070' => 1,
-                        ],
+        $sensorIds = ['sensor-edge.server.fadhilyori.my.id', 'personal-vps'];
+        $priorities = ['Low', 'Medium', 'High'];
+        $classifications = ['none', 'Web Application Attack'];
+        $messages = ['(stream_tcp) reset outside window', '(arp_spoof) ARP Spoofing', 'Trojan AdWare.Win32.Agent'];
+        $protocols = ['TCP', 'UDP'];
+
+        $data = [];
+
+        for ($i = 0; $i < 25; $i++) {
+            $metrics = [];
+            for ($j = 0; $j < $faker->numberBetween(1, 5); $j++) {
+                $metrics[] = [
+                    'count' => $faker->numberBetween(2, 10),
+                    'snort_dst_address' => $faker->ipv4,
+                    'snort_src_address' => $faker->ipv4,
+                    'snort_dst_src_port' => [
+                        $faker->numberBetween(1, 65535) . ':' . $faker->numberBetween(1, 65535) => $faker->numberBetween(1, 5),
                     ],
-                    [
-                        'count' => 1,
-                        'snort_dst_address' => '192.168.0.102',
-                        'snort_src_address' => '192.168.0.101',
-                        'snort_dst_src_port' => [
-                            '443:36528' => 1,
-                        ],
-                    ]
-                ]
-            ],
-            [
-                'event_metrics_count' => 2,
-                'sensor_id' => 'personal-vps',
-                'snort_priority' => 'Medium',
-                'snort_classification' => 'none',
-                'snort_message' => '(arp_spoof) ARP Spoofing',
-                'snort_protocol' => 'TCP',
-                'snort_seconds' => 1737428400,
-                'metrics' => [
-                    [
-                        'count' => 1,
-                        'snort_dst_address' => '192.168.0.103',
-                        'snort_src_address' => '192.168.0.104',
-                        'snort_dst_src_port' => [
-                            '443:33071' => 1,
-                        ],
-                    ],
-                    [
-                        'count' => 1,
-                        'snort_dst_address' => '192.168.0.104',
-                        'snort_src_address' => '192.168.0.101',
-                        'snort_dst_src_port' => [
-                            '443:36529' => 1,
-                        ],
-                    ]
-                ]
-            ],
-            [
-                'event_metrics_count' => 5,
-                'sensor_id' => 'personal-vps',
-                'snort_priority' => 'Medium',
-                'snort_classification' => 'none',
-                'snort_message' => '(arp_spoof) ARP Spoofing',
-                'snort_protocol' => 'TCP',
-                'snort_seconds' => 1737428400,
-                'metrics' => [
-                    [
-                        'count' => 3,
-                        'snort_dst_address' => '192.168.0.100',
-                        'snort_src_address' => '192.168.0.101',
-                        'snort_dst_src_port' => [
-                            '443:33071' => 3,
-                        ],
-                    ],
-                    [
-                        'count' => 2,
-                        'snort_dst_address' => '192.168.0.103',
-                        'snort_src_address' => '192.168.0.102',
-                        'snort_dst_src_port' => [
-                            '443:36529' => 2,
-                        ],
-                    ]
-                ]
-            ],
-            [
-                'event_metrics_count' => 4,
-                'sensor_id' => 'sensor-edge.server.fadhilyori.my.id',
-                'snort_priority' => 'High',
-                'snort_classification' => 'Web Application Attack',
-                'snort_message' => 'Trojan AdWare.Win32.Agent',
-                'snort_protocol' => 'TCP',
-                'snort_seconds' => 1737428400,
-                'metrics' => [
-                    [
-                        'count' => 2,
-                        'snort_dst_address' => '192.168.0.100',
-                        'snort_src_address' => '192.168.0.101',
-                        'snort_dst_src_port' => [
-                            '443:33071' => 2,
-                        ],
-                    ],
-                    [
-                        'count' => 2,
-                        'snort_dst_address' => '192.168.0.103',
-                        'snort_src_address' => '192.168.0.102',
-                        'snort_dst_src_port' => [
-                            '443:36529' => 2,
-                        ],
-                    ]
-                ]
-            ],
-        ];
+                ];
+            }
+
+            $data[] = [
+                'event_metrics_count' => count($metrics),
+                'sensor_id' => $faker->randomElement($sensorIds),
+                'snort_priority' => $faker->randomElement($priorities),
+                'snort_classification' => $faker->randomElement($classifications),
+                'snort_message' => $faker->randomElement($messages),
+                'snort_protocol' => $faker->randomElement($protocols),
+                'metrics' => $metrics,
+            ];
+        }
+
+        $currentTime = $startTime;
 
         foreach ($data as $item) {
             $item['snort_seconds'] = $currentTime;
 
-            // TODO: process the data
             $sensor = Sensor::firstOrCreate(
                 ['sensor_name' => $item['sensor_id']],
                 [
@@ -175,9 +96,7 @@ class SensorEventSeeder extends Seeder
             AlertMetric::incrementOrCreate(
                 $alertMetricAttributes,
                 'count',
-                1,
-                $item['event_metrics_count'],
-                []
+                $item['event_metrics_count']
             );
 
             $sensorMetricAttributes = [
@@ -188,14 +107,10 @@ class SensorEventSeeder extends Seeder
             SensorMetric::incrementOrCreate(
                 $sensorMetricAttributes,
                 'count',
-                1,
-                $item['event_metrics_count'],
-                []
+                $item['event_metrics_count']
             );
 
             foreach ($item['metrics'] as $metric) {
-                Log::info('Processing Metric:', ['metric' => $metric]);
-
                 foreach ($metric['snort_dst_src_port'] as $port => $count) {
                     list($dstPort, $srcPort) = explode(':', $port);
 
@@ -212,13 +127,16 @@ class SensorEventSeeder extends Seeder
                         'destination_port' => $dstPort,
                     ],
                      'count',
-                     1,
                      $count,
-                     []);
+                    );
                 }
             }
 
-            $currentTime += (rand(floor($intervalRangeStart / $step), floor($intervalRangeEnd / $step)) * $step) * 60 * 60;
+            $currentTime += rand(1, 12) * 24 * 60 * 60;
+
+            if ($currentTime > $endTime) {
+                $currentTime = $startTime;
+            }
         }
     }
 

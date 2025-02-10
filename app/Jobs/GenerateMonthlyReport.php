@@ -36,14 +36,6 @@ class GenerateMonthlyReport extends GenerateReport implements ShouldQueue
             throw new \InvalidArgumentException('Input date are same or greater than current date');
         }
 
-        // TODO: validate input, month should be between 1 and 12 and year should not be greater than current year
-
-        // TODO: validate input, input should not same or greater than current month
-
-        // TODO: if year is not provided, use the current year
-
-        // TODO: if month is not provided, use the current month
-
         // Create start and end date based on month and year provided
         $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
         $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
