@@ -1,193 +1,39 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Jobs;
 
-use App\Models\AlertMessage;
 use App\Models\AlertMetric;
-use App\Models\Classification;
-use App\Models\Identity;
 use App\Models\Priority;
 use App\Models\Report;
 use App\Models\Sensor;
 use App\Models\SensorMetric;
 use App\Models\Traffic;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Carbon\Carbon;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Log;
 
-class ReportController extends Controller
+class GenerateReport implements ShouldQueue
 {
+    public $startDate;
+    public $endDate;
+    protected $templateName;
+
     /**
-     * Get the complete report as a JSON object.
-     *
-     * @return JsonResponse
+     * Create a new job instance.
      */
-    public function getReport(Request $request): JsonResponse
-{
-       // Get raw JSON from the request
-       $rawJson = $request->getContent();
-       $event = json_decode($rawJson, true);
-
-       // Check if JSON decoded correctly
-       if (json_last_error() !== JSON_ERROR_NONE) {
-           Log::error('JSON Decode Error:', ['error' => json_last_error_msg(), 'raw_json' => $rawJson]);
-           return response()->json(['error' => 'Invalid JSON data'], 400);
-       }
-
-       // Ensure $data is an array
-       if (!is_array($event)) {
-           Log::error('Decoded JSON is not an array', ['decoded' => $event]);
-           return response()->json(['error' => 'Invalid JSON structure'], 400);
-       }
-
-       // Ensure required keys exist
-       $requiredKeys = ['sensor_id', 'snort_priority', 'snort_classification', 'snort_message', 'snort_seconds', 'metrics'];
-
-       foreach ($requiredKeys as $key) {
-           if (!isset($event[$key])) {
-               Log::error("Missing required key: $key", ['event' => $event]);
-               return response()->json(['error' => "Missing required key: $key"], 400);
-           }
-       }
-
-    // Process sensor
-    $sensor = Sensor::firstOrCreate(
-        ['sensor_name' => $event['sensor_id']],
-        [
-            'id' => Str::uuid()->toString(),
-            'sensor_name' => $event['sensor_id'],
-        ]
-    );
-
-    // Process classification
-    $priority = Priority::where('name', $event['snort_priority'])->first();
-    if (!$priority) {
-        Log::error('Invalid snort priority', ['priority' => $event['snort_priority']]);
-        return response()->json(['error' => 'Invalid snort priority'], 400);
+    public function __construct($startDate, $endDate)
+    {
+        $this->startDate = $startDate;
+        $this->endDate = $endDate;
     }
 
-    $classification = Classification::firstOrCreate(
-        [
-            'classification' => $event['snort_classification'],
-            'priority_id' => $priority->id,
-        ]
-    );
-
-    $alertMessage = AlertMessage::firstOrCreate(
-        [
-            'classification_id' => $classification->id,
-            'alert_message' => $event['snort_message']
-        ]
-    );
-
-    // Process alert metrics
-    $alertMetricAttributes = [
-        'timestamp' => date('Y-m-d H:i:s', $event['snort_seconds']),
-        'sensor_id' => $sensor->id,
-        'alert_id' => $alertMessage->id,
-    ];
-
-    $alertMetric = AlertMetric::incrementOrCreate(
-        $alertMetricAttributes,
-        'count',
-        1,
-        $event['event_metrics_count'],
-        []
-    );
-
-    $sensorMetricAttributes = [
-        'timestamp' => date('Y-m-d H:i:s', $event['snort_seconds']),
-        'sensor_id' => $sensor->id,
-    ];
-
-    $sensorMetric = SensorMetric::incrementOrCreate(
-        $sensorMetricAttributes,
-        'count',
-        1,
-        $event['event_metrics_count'],
-        []
-    );
-
-    $trafficData = [];
-
-    foreach ($event['metrics'] as $metric) {
-        // Log::info('Processing Metric:', ['metric' => $metric]);
-
-        if (!isset($metric['snort_dst_src_port']) || !is_array($metric['snort_dst_src_port'])) {
-            Log::error('Invalid metric format', ['metric' => $metric]);
-            return response()->json(['error' => 'Invalid metric format'], 400);
-        }
-
-        foreach ($metric['snort_dst_src_port'] as $port => $count) {
-            list($dstPort, $srcPort) = explode(':', $port);
-
-            $srcIpAddress = $this->createOrUpdateIdentity($metric['snort_src_address']);
-            $dstIpAddress = $this->createOrUpdateIdentity($metric['snort_dst_address']);
-
-            $traffic = Traffic::incrementOrCreate(
-                [
-                    'timestamp' => date('Y-m-d H:i:s', $event['snort_seconds']),
-                    'sensor_id' => $sensor->id,
-                    'source_ip' => $srcIpAddress->ip_address,
-                    'source_port' => $srcPort,
-                    'destination_ip' => $dstIpAddress->ip_address,
-                    'destination_port' => $dstPort,
-                ],
-                'count',
-                1,
-                $count,
-                []
-            );
-
-            $trafficData[] = [
-                'id' => $traffic->id,
-                'timestamp' => $traffic->timestamp,
-                'sensor_id' => $traffic->sensor_id,
-                'source_ip' => $traffic->source_ip,
-                'source_port' => $traffic->source_port,
-                'destination_ip' => $traffic->destination_ip,
-                'destination_port' => $traffic->destination_port,
-                'count' => $traffic->count
-            ];
-        }
-    }
-
-    return response()->json([
-        'message' => 'success',
-        'data' => [
-            'alert_metric' => [
-                'timestamp' => $alertMetric->timestamp,
-                'sensor' => [
-                    'id' => $sensor->id,
-                    'sensor_name' => $sensor->sensor_name,
-                ],
-                'alert_message' => [
-                    'classification' => [
-                        'classification' => $classification->classification,
-                        'priority' => $classification->priority->name,
-                    ],
-                    'alert_message' => $alertMessage->alert_message,
-                ],
-                'count' => $alertMetric->count,
-            ],
-            'sensor_metric' => [
-                'timestamp' => $sensorMetric->timestamp,
-                'sensor_id' => $sensorMetric->sensor_id,
-                'count' => $sensorMetric->count
-            ],
-            'traffic' => $trafficData,
-        ]
-    ], 200);
-    }
-
-    public function generateReport()
+    /**
+     * Execute the job.
+     */
+    public function handle()
     {
         try {
             $alertMetrics = AlertMetric::with('alertMessage.classification.priority')
-                ->whereBetween('timestamp', [Carbon::now()->subMonth(), Carbon::now()])
+                ->whereBetween('timestamp', [$this->startDate, $this->endDate])
                 ->get();
             $sensorMetrics = SensorMetric::with('sensor')
                 ->whereBetween('timestamp', [$this->startDate, $this->endDate])
@@ -241,7 +87,6 @@ class ReportController extends Controller
                 }
                 return $priorityA <=> $priorityB;
             });
-
             $topAlertData = $sortedAlertMetrics->take(10)->values();
 
             // Top 10 Source IP
@@ -411,9 +256,6 @@ class ReportController extends Controller
                 'sensors' => $sensors,
             ];
 
-            Log::info('Template name: ' . $this->templateName);
-            Log::info('Data: ', $data);
-
             Report::query()->create([
                 'template_id' => $this->templateName,
                 'data' => $data,
@@ -424,62 +266,4 @@ class ReportController extends Controller
             Log::error('Error generating report: ' . $e);
         }
     }
-
-    public function index()
-    {
-        $reports = Report::all();
-
-        return view('dashboard', compact('reports'));
-    }
-
-    public function downloadReport($id)
-    {
-        $report = Report::find($id);
-
-        if (!$report) {
-            return response()->json(['message' => 'Report not found'], 404);
-        }
-
-        $data = is_array($report->data) ? $report->data : json_decode($report->data, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return response()->json(['message' => 'Invalid report data'], 400);
-        }
-
-        $pdf = Pdf::loadView('reports.alert_report', $data);
-
-        return $pdf->download('report_' . $report->id . '.pdf');
-    }
-
-    public function destroy($id)
-    {
-        try {
-            $report = Report::findOrFail($id);
-            $report->delete();
-
-            Log::info('Report deleted successfully', ['id' => $id]);
-
-            return response()->json(['message' => 'Report deleted successfully'], 200);
-        } catch (\Exception $e) {
-            Log::error('Error deleting report', ['id' => $id, 'error' => $e->getMessage()]);
-
-            return response()->json(['error' => 'Error deleting report'], 500);
-        }
-    }
-
-    private function createOrUpdateIdentity($ipAddress): Identity
-    {
-        if (!empty($ipAddress)) {
-            $identity = Identity::firstOrCreate(
-                ['ip_address' => $ipAddress],
-                [
-                    'ip_address' => $ipAddress,
-                    'country_name' => fake()->country,
-                ]
-            );
-        }
-
-        return $identity;
-    }
 }
-

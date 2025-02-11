@@ -160,3 +160,30 @@
         "metrics": []
     }
 ]
+
+
+{
+    "data":
+        {
+            "key_hash":"56b6583646d8f38badaa7922c6918724354484b1f3056bd651222206990d6af9",
+            "event_metrics_count":1,
+            "sensor_id":"sensor-12",
+            "snort_priority":"Low",
+            "snort_classification":"none",
+            "snort_message":"(ipv4) IPv4 packet from 'current net' source address",
+            "snort_protocol":"UDP",
+            "snort_seconds":1738598400,
+            "metrics":
+            [
+                {
+                    "count":1,
+                    "snort_dst_address":"255.255.255.255",
+                    "snort_src_address":"0.0.0.0",
+                    "snort_dst_src_port":
+                    {
+                        "67:68":1
+                    }
+                }
+            ]
+        }
+}

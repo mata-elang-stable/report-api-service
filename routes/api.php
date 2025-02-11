@@ -9,4 +9,3 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::post('/report-index', [ReportController::class, 'getReport']);
-// Route::get('/generate', [ReportController::class, 'generateReport']);
