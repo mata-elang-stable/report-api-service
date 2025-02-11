@@ -39,7 +39,7 @@ class GenerateReport implements ShouldQueue
                 ->whereBetween('timestamp', [$this->startDate, $this->endDate])
                 ->get();
             $priorities = Priority::all()->pluck('id', 'name')->toArray();
-            $traffics = Traffic::with('sourceIdentity', 'destinationidentity')
+            $traffics = Traffic::with('sourceIdentity', 'destinationIdentity')
                 ->whereBetween('timestamp', [$this->startDate, $this->endDate])
                 ->get();
             $sensors = Sensor::all();
@@ -49,7 +49,7 @@ class GenerateReport implements ShouldQueue
 
             // Top 10 Priority
             $priorityCounts = [];
-            foreach($alertMetrics as $alertMetric) {
+            foreach ($alertMetrics as $alertMetric) {
                 $totalEvents += $alertMetric->count;
                 $priorityName = $alertMetric->alertMessage->classification->priority->name;
                 if (!isset($priorityCounts[$priorityName])) {
@@ -59,7 +59,7 @@ class GenerateReport implements ShouldQueue
             }
 
             // Sort priorities by count in descending order and take top 10
-            $priorityCounts = collect($priorityCounts)->sortByDesc(function($count, $priority) {
+            $priorityCounts = collect($priorityCounts)->sortByDesc(function ($count, $priority) {
                 return $count;
             })->take(10)->toArray();
 
@@ -79,7 +79,7 @@ class GenerateReport implements ShouldQueue
             });
 
             // Sort grouped alert metrics by priority and count
-            $sortedAlertMetrics = $groupedAlertMetrics->sort(function($a, $b) use ($priorities) {
+            $sortedAlertMetrics = $groupedAlertMetrics->sort(function ($a, $b) use ($priorities) {
                 $priorityA = $priorities[$a['priority']] ?? 999;
                 $priorityB = $priorities[$b['priority']] ?? 999;
                 if ($priorityA === $priorityB) {
@@ -87,7 +87,6 @@ class GenerateReport implements ShouldQueue
                 }
                 return $priorityA <=> $priorityB;
             });
-
             $topAlertData = $sortedAlertMetrics->take(10)->values();
 
             // Top 10 Source IP
@@ -110,7 +109,7 @@ class GenerateReport implements ShouldQueue
             });
             $topSourceCountries = $sourceCountryCounts->sortByDesc('count')->take(10)->values();
 
-            //Top 10 Destination IP
+            // Top 10 Destination IP
             $destinationIpCounts = collect($traffics)->groupBy('destination_ip')->map(function ($items, $key) {
                 return [
                     'destinationIp' => $key,
@@ -149,7 +148,7 @@ class GenerateReport implements ShouldQueue
             });
             $topSourcePorts = $sourcePortCounts->sortByDesc('count')->take(10)->values();
 
-            //Top 10 Destination Port
+            // Top 10 Destination Port
             $destinationPortCounts = collect($traffics)->groupBy('destination_port')->map(function ($items, $key) {
                 return [
                     'destinationPort' => $key,
@@ -173,7 +172,7 @@ class GenerateReport implements ShouldQueue
                 $sensor->priorityCounts = $priorityCountsSensor;
                 $groupedAlertMetrics = $alertMetrics->where('sensor_id', $sensor->id)->groupBy(function ($alertMetric) {
                     return $alertMetric->alertMessage->classification->priority->name . '|' .
-                        $alertMetric->alertMessage->classification->classification . '|' .
+                        $alertMetric->alertMessage->classification . '|' .
                         $alertMetric->alertMessage->alert_message;
                 })->map(function ($group) {
                     $first = $group->first();
@@ -184,7 +183,7 @@ class GenerateReport implements ShouldQueue
                         'count' => $group->sum('count'),
                     ];
                 });
-                $sortedAlertMetrics = $groupedAlertMetrics->sort(function($a, $b) use ($priorities) {
+                $sortedAlertMetrics = $groupedAlertMetrics->sort(function ($a, $b) use ($priorities) {
                     $priorityA = $priorities[$a['priority']] ?? 999;
                     $priorityB = $priorities[$b['priority']] ?? 999;
                     if ($priorityA === $priorityB) {
@@ -256,8 +255,6 @@ class GenerateReport implements ShouldQueue
                 'topDestinationPorts' => $topDestinationPorts,
                 'sensors' => $sensors,
             ];
-
-            Log::info('Template name: ' . $this->templateName);
 
             Report::query()->create([
                 'template_id' => $this->templateName,

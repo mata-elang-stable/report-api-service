@@ -34,7 +34,6 @@ class GenerateAnnualReport extends GenerateReport implements ShouldQueue
             $endDate = Carbon::createFromDate($year, 1, 1)->endOfYear();
         }
 
-        Log::info('Start Date: ' . $startDate);
         Log::info('Dispatching GenerateReport job for annual report');
 
         parent::__construct($startDate, $endDate);

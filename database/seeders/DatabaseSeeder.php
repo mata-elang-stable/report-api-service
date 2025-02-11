@@ -13,7 +13,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             PrioritySeeder::class,
-            SensorEventSeeder::class,
+            // SensorEventSeeder::class,
         ]);
     }
 }

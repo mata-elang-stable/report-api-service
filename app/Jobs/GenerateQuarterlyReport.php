@@ -37,7 +37,7 @@ class GenerateQuarterlyReport extends GenerateReport implements ShouldQueue
             $startDate = Carbon::createFromDate($year, $month, 1)->startOfQuarter();
             $endDate = Carbon::createFromDate($year, $month, 1)->endOfQuarter();
         }
-        Log::info('Start Date: ' . $startDate);
+
         Log::info('Dispatching GenerateReport job for quarterly report');
 
         parent::__construct($startDate, $endDate);

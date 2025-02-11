@@ -22,9 +22,6 @@ class GenerateMonthlyReport extends GenerateReport implements ShouldQueue
      */
     public function __construct(int $month = null, int $year = null)
     {
-        // input: month = 1, year = 2021
-        // output: startDate = 2021-01-01 00:00:00, endDate = 2021-01-31 23:59:59
-
         $month = $month ?? Carbon::now()->subMonth()->month;
         $year = $year ?? Carbon::now()->year;
 
@@ -36,11 +33,9 @@ class GenerateMonthlyReport extends GenerateReport implements ShouldQueue
             throw new \InvalidArgumentException('Input date are same or greater than current date');
         }
 
-        // Create start and end date based on month and year provided
         $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
         $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
 
-        Log::info('Start Date: ' . $startDate);
         Log::info('Dispatching GenerateReport job for monthly report');
 
         parent::__construct($startDate, $endDate);
