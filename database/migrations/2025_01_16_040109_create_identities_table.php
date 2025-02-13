@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('identities', function (Blueprint $table) {
-            $table->ipAddress('ip_address')->primary();
+            $table->id();
+            $table->ipAddress('ip_address');
             $table->string('country_name')->nullable();
             $table->timestamps();
         });

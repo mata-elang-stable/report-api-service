@@ -12,7 +12,7 @@
                 <thead>
                     <tr>
                         <th class="px-6 py-3 bg-gray-50 dark:bg-gray-700 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                            ID
+                            No.
                         </th>
                         <th class="px-6 py-3 bg-gray-50 dark:bg-gray-700 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Template Name
@@ -29,7 +29,7 @@
                     @foreach ($reports as $report)
                         <tr>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">
-                                {{ $report->id }}
+                                {{ $loop->iteration }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-200">
                                 {{ prettifyTemplateName($report->template_id) }}
