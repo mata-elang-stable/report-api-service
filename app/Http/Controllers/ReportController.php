@@ -11,6 +11,7 @@ use App\Models\Report;
 use App\Models\Sensor;
 use App\Models\SensorMetric;
 use App\Models\Traffic;
+use Http;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -26,161 +27,154 @@ class ReportController extends Controller
      * @return JsonResponse
      */
     public function getReport(Request $request): JsonResponse
-{
-       // Get raw JSON from the request
-       $rawJson = $request->getContent();
-       $event = json_decode($rawJson, true);
+    {
+        $rawJson = $request->getContent();
+        $event = json_decode($rawJson, true);
 
-       // Check if JSON decoded correctly
-       if (json_last_error() !== JSON_ERROR_NONE) {
-           Log::error('JSON Decode Error:', ['error' => json_last_error_msg(), 'raw_json' => $rawJson]);
-           return response()->json(['error' => 'Invalid JSON data'], 400);
-       }
-
-       // Ensure $data is an array
-       if (!is_array($event)) {
-           Log::error('Decoded JSON is not an array', ['decoded' => $event]);
-           return response()->json(['error' => 'Invalid JSON structure'], 400);
-       }
-
-       // Ensure required keys exist
-       $requiredKeys = ['sensor_id', 'snort_priority', 'snort_classification', 'snort_message', 'snort_seconds', 'metrics'];
-
-       foreach ($requiredKeys as $key) {
-           if (!isset($event[$key])) {
-               Log::error("Missing required key: $key", ['event' => $event]);
-               return response()->json(['error' => "Missing required key: $key"], 400);
-           }
-       }
-
-    // Process sensor
-    $sensor = Sensor::firstOrCreate(
-        ['sensor_name' => $event['sensor_id']],
-        [
-            'id' => Str::uuid()->toString(),
-            'sensor_name' => $event['sensor_id'],
-        ]
-    );
-
-    // Process classification
-    $priority = Priority::where('name', $event['snort_priority'])->first();
-    if (!$priority) {
-        Log::error('Invalid snort priority', ['priority' => $event['snort_priority']]);
-        return response()->json(['error' => 'Invalid snort priority'], 400);
-    }
-
-    $classification = Classification::firstOrCreate(
-        [
-            'classification' => $event['snort_classification'],
-            'priority_id' => $priority->id,
-        ]
-    );
-
-    $alertMessage = AlertMessage::firstOrCreate(
-        [
-            'classification_id' => $classification->id,
-            'alert_message' => $event['snort_message']
-        ]
-    );
-
-    // Process alert metrics
-    $alertMetricAttributes = [
-        'timestamp' => date('Y-m-d H:i:s', $event['snort_seconds']),
-        'sensor_id' => $sensor->id,
-        'alert_id' => $alertMessage->id,
-    ];
-
-    $alertMetric = AlertMetric::incrementOrCreate(
-        $alertMetricAttributes,
-        'count',
-        1,
-        $event['event_metrics_count'],
-        []
-    );
-
-    $sensorMetricAttributes = [
-        'timestamp' => date('Y-m-d H:i:s', $event['snort_seconds']),
-        'sensor_id' => $sensor->id,
-    ];
-
-    $sensorMetric = SensorMetric::incrementOrCreate(
-        $sensorMetricAttributes,
-        'count',
-        1,
-        $event['event_metrics_count'],
-        []
-    );
-
-    $trafficData = [];
-
-    foreach ($event['metrics'] as $metric) {
-        // Log::info('Processing Metric:', ['metric' => $metric]);
-
-        if (!isset($metric['snort_dst_src_port']) || !is_array($metric['snort_dst_src_port'])) {
-            Log::error('Invalid metric format', ['metric' => $metric]);
-            return response()->json(['error' => 'Invalid metric format'], 400);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            Log::error('JSON Decode Error:', ['error' => json_last_error_msg(), 'raw_json' => $rawJson]);
+            return response()->json(['error' => 'Invalid JSON data'], 400);
         }
 
-        foreach ($metric['snort_dst_src_port'] as $port => $count) {
-            list($dstPort, $srcPort) = explode(':', $port);
-
-            $srcIpAddress = $this->createOrUpdateIdentity($metric['snort_src_address']);
-            $dstIpAddress = $this->createOrUpdateIdentity($metric['snort_dst_address']);
-
-            $traffic = Traffic::incrementOrCreate(
-                [
-                    'timestamp' => date('Y-m-d H:i:s', $event['snort_seconds']),
-                    'sensor_id' => $sensor->id,
-                    'source_ip' => $srcIpAddress->ip_address,
-                    'source_port' => $srcPort,
-                    'destination_ip' => $dstIpAddress->ip_address,
-                    'destination_port' => $dstPort,
-                ],
-                'count',
-                1,
-                $count,
-                []
-            );
-
-            $trafficData[] = [
-                'id' => $traffic->id,
-                'timestamp' => $traffic->timestamp,
-                'sensor_id' => $traffic->sensor_id,
-                'source_ip' => $traffic->source_ip,
-                'source_port' => $traffic->source_port,
-                'destination_ip' => $traffic->destination_ip,
-                'destination_port' => $traffic->destination_port,
-                'count' => $traffic->count
-            ];
+        if (!is_array($event)) {
+            Log::error('Decoded JSON is not an array', ['decoded' => $event]);
+            return response()->json(['error' => 'Invalid JSON structure'], 400);
         }
-    }
 
-    return response()->json([
-        'message' => 'success',
-        'data' => [
-            'alert_metric' => [
-                'timestamp' => $alertMetric->timestamp,
-                'sensor' => [
-                    'id' => $sensor->id,
-                    'sensor_name' => $sensor->sensor_name,
-                ],
-                'alert_message' => [
-                    'classification' => [
-                        'classification' => $classification->classification,
-                        'priority' => $classification->priority->name,
+        $requiredKeys = ['sensor_id', 'snort_priority', 'snort_classification', 'snort_message', 'snort_seconds', 'metrics'];
+
+        foreach ($requiredKeys as $key) {
+            if (!isset($event[$key])) {
+                Log::error("Missing required key: $key", ['event' => $event]);
+                return response()->json(['error' => "Missing required key: $key"], 400);
+            }
+        }
+
+        $sensor = Sensor::firstOrCreate(
+            ['sensor_name' => $event['sensor_id']],
+            [
+                'id' => Str::uuid()->toString(),
+                'sensor_name' => $event['sensor_id'],
+            ]
+        );
+
+        $priority = Priority::where('name', $event['snort_priority'])->first();
+        if (!$priority) {
+            Log::error('Invalid snort priority', ['priority' => $event['snort_priority']]);
+            return response()->json(['error' => 'Invalid snort priority'], 400);
+        }
+
+        $classification = Classification::firstOrCreate(
+            [
+                'classification' => $event['snort_classification'],
+                'priority_id' => $priority->id,
+            ]
+        );
+
+        $alertMessage = AlertMessage::firstOrCreate(
+            [
+                'classification_id' => $classification->id,
+                'alert_message' => $event['snort_message']
+            ]
+        );
+
+        $alertMetricAttributes = [
+            'timestamp' => date('Y-m-d H:i:s', $event['snort_seconds']),
+            'sensor_id' => $sensor->id,
+            'alert_id' => $alertMessage->id,
+        ];
+
+        $alertMetric = AlertMetric::incrementOrCreate(
+            $alertMetricAttributes,
+            'count',
+            1,
+            $event['event_metrics_count'],
+            []
+        );
+
+        $sensorMetricAttributes = [
+            'timestamp' => date('Y-m-d H:i:s', $event['snort_seconds']),
+            'sensor_id' => $sensor->id,
+        ];
+
+        $sensorMetric = SensorMetric::incrementOrCreate(
+            $sensorMetricAttributes,
+            'count',
+            1,
+            $event['event_metrics_count'],
+            []
+        );
+
+        $trafficData = [];
+
+        foreach ($event['metrics'] as $metric) {
+            // Log::info('Processing Metric:', ['metric' => $metric]);
+
+            if (!isset($metric['snort_dst_src_port']) || !is_array($metric['snort_dst_src_port'])) {
+                Log::error('Invalid metric format', ['metric' => $metric]);
+                return response()->json(['error' => 'Invalid metric format'], 400);
+            }
+
+            foreach ($metric['snort_dst_src_port'] as $port => $count) {
+                list($dstPort, $srcPort) = explode(':', $port);
+
+                $srcIpAddress = $this->createOrUpdateIdentity($metric['snort_src_address']);
+                $dstIpAddress = $this->createOrUpdateIdentity($metric['snort_dst_address']);
+
+                $traffic = Traffic::incrementOrCreate(
+                    [
+                        'timestamp' => date('Y-m-d H:i:s', $event['snort_seconds']),
+                        'sensor_id' => $sensor->id,
+                        'source_ip' => $srcIpAddress->id,
+                        'source_port' => $srcPort,
+                        'destination_ip' => $dstIpAddress->id,
+                        'destination_port' => $dstPort,
                     ],
-                    'alert_message' => $alertMessage->alert_message,
+                    'count',
+                    1,
+                    $count,
+                    []
+                );
+
+                $trafficData[] = [
+                    'id' => $traffic->id,
+                    'timestamp' => $traffic->timestamp,
+                    'sensor_id' => $traffic->sensor_id,
+                    'source_ip' => $traffic->source_ip,
+                    'source_port' => $traffic->source_port,
+                    'destination_ip' => $traffic->destination_ip,
+                    'destination_port' => $traffic->destination_port,
+                    'count' => $traffic->count
+                ];
+            }
+        }
+
+        return response()->json([
+            'message' => 'success',
+            'data' => [
+                'alert_metric' => [
+                    'timestamp' => $alertMetric->timestamp,
+                    'sensor' => [
+                        'id' => $sensor->id,
+                        'sensor_name' => $sensor->sensor_name,
+                    ],
+                    'alert_message' => [
+                        'classification' => [
+                            'classification' => $classification->classification,
+                            'priority' => $classification->priority->name,
+                        ],
+                        'alert_message' => $alertMessage->alert_message,
+                    ],
+                    'count' => $alertMetric->count,
                 ],
-                'count' => $alertMetric->count,
-            ],
-            'sensor_metric' => [
-                'timestamp' => $sensorMetric->timestamp,
-                'sensor_id' => $sensorMetric->sensor_id,
-                'count' => $sensorMetric->count
-            ],
-            'traffic' => $trafficData,
-        ]
-    ], 200);
+                'sensor_metric' => [
+                    'timestamp' => $sensorMetric->timestamp,
+                    'sensor_id' => $sensorMetric->sensor_id,
+                    'count' => $sensorMetric->count
+                ],
+                'traffic' => $trafficData,
+            ]
+        ], 200);
     }
 
     public function generateReport()
@@ -190,11 +184,11 @@ class ReportController extends Controller
                 ->whereBetween('timestamp', [Carbon::now()->subMonth(), Carbon::now()])
                 ->get();
             $sensorMetrics = SensorMetric::with('sensor')
-                ->whereBetween('timestamp', [$this->startDate, $this->endDate])
+                ->whereBetween('timestamp', [Carbon::now()->subMonth(), Carbon::now()])
                 ->get();
             $priorities = Priority::all()->pluck('id', 'name')->toArray();
             $traffics = Traffic::with('sourceIdentity', 'destinationIdentity')
-                ->whereBetween('timestamp', [$this->startDate, $this->endDate])
+                ->whereBetween('timestamp', [Carbon::now()->subMonth(), Carbon::now()])
                 ->get();
             $sensors = Sensor::all();
             $totalEvents = 0;
@@ -411,11 +405,8 @@ class ReportController extends Controller
                 'sensors' => $sensors,
             ];
 
-            Log::info('Template name: ' . $this->templateName);
-            Log::info('Data: ', $data);
-
             Report::query()->create([
-                'template_id' => $this->templateName,
+                'template_id' => 'generate_report',
                 'data' => $data,
             ]);
 
@@ -427,7 +418,7 @@ class ReportController extends Controller
 
     public function index()
     {
-        $reports = Report::all();
+        $reports = Report::orderBy('created_at', 'desc')->get();
 
         return view('dashboard', compact('reports'));
     }
@@ -470,13 +461,26 @@ class ReportController extends Controller
     private function createOrUpdateIdentity($ipAddress): Identity
     {
         if (!empty($ipAddress)) {
+            $response = Http::get('http://192.168.0.100:3080/lookup', ['ip' => $ipAddress]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $country = $data['region']['country']['names']['en'] ?? 'Unknown';
+            } else {
+                $country = 'Unknown';
+            }
+
             $identity = Identity::firstOrCreate(
-                ['ip_address' => $ipAddress],
                 [
                     'ip_address' => $ipAddress,
-                    'country_name' => fake()->country,
+                    'country_name' => $country,
+                ],
+                [
+                    'ip_address' => $ipAddress,
+                    'country_name' => $country,
                 ]
             );
+
         }
 
         return $identity;
