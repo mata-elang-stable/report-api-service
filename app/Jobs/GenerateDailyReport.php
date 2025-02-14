@@ -19,7 +19,7 @@ class GenerateDailyReport extends GenerateReport implements ShouldQueue
      */
     public function __construct(int $day = null, int $month = null, int $year = null)
     {
-        $day = $day ?? Carbon::now()->subDay()->day;
+        $day = $day ?? Carbon::now()->day;
         $month = $month ?? Carbon::now()->month;
         $year = $year ?? Carbon::now()->year;
 
@@ -27,7 +27,7 @@ class GenerateDailyReport extends GenerateReport implements ShouldQueue
             throw new \InvalidArgumentException('Input date is invalid');
         }
 
-        if ($year == Carbon::now()->year && $month >= Carbon::now()->month && $day >= Carbon::now()->day) {
+        if ($year == Carbon::now()->year && $month >= Carbon::now()->month && $day > Carbon::now()->day) {
             throw new \InvalidArgumentException('Input date are same or greater than current date');
         }
 
@@ -35,7 +35,7 @@ class GenerateDailyReport extends GenerateReport implements ShouldQueue
         $endDate = Carbon::createFromDate($year, $month, $day)->endOfDay();
 
         Log::info('Dispatching GenerateReport job for daily report');
-
+        // dd($startDate, $endDate);
         parent::__construct($startDate, $endDate);
     }
 }

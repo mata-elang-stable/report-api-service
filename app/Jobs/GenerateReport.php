@@ -8,11 +8,17 @@ use App\Models\Report;
 use App\Models\Sensor;
 use App\Models\SensorMetric;
 use App\Models\Traffic;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Log;
 
 class GenerateReport implements ShouldQueue
 {
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
     public $startDate;
     public $endDate;
     protected $templateName;
@@ -35,13 +41,27 @@ class GenerateReport implements ShouldQueue
             $alertMetrics = AlertMetric::with('alertMessage.classification.priority')
                 ->whereBetween('timestamp', [$this->startDate, $this->endDate])
                 ->get();
+
             $sensorMetrics = SensorMetric::with('sensor')
                 ->whereBetween('timestamp', [$this->startDate, $this->endDate])
                 ->get();
+
             $priorities = Priority::all()->pluck('id', 'name')->toArray();
+
             $traffics = Traffic::with('sourceIdentity', 'destinationIdentity')
-                ->whereBetween('timestamp', [$this->startDate, $this->endDate])
-                ->get();
+                ->whereBetween('timestamp', [$this->startDate, $this->endDate])->get();
+
+            // Convert numeric IPs to valid IP address strings
+            $traffics = $traffics->map(function ($traffic) {
+                if (is_numeric($traffic->source_ip)) {
+                    $traffic->source_ip = long2ip($traffic->source_ip);
+                }
+                if (is_numeric($traffic->destination_ip)) {
+                    $traffic->destination_ip = long2ip($traffic->destination_ip);
+                }
+                return $traffic;
+            });
+
             $sensors = Sensor::all();
             $totalEvents = 0;
 
@@ -91,11 +111,15 @@ class GenerateReport implements ShouldQueue
 
             // Top 10 Source IP
             $sourceIpCounts = collect($traffics)->groupBy('source_ip')->map(function ($items, $key) {
-                return [
-                    'sourceIp' => $key,
-                    'count' => $items->sum('count')
-                ];
-            });
+                // Ensure the key is a valid IP address string
+                if (filter_var($key, FILTER_VALIDATE_IP)) {
+                    return [
+                        'sourceIp' => $key,
+                        'count' => $items->sum('count')
+                    ];
+                }
+                return null;
+            })->filter(); // Remove invalid IPs
             $topSourceIps = $sourceIpCounts->sortByDesc('count')->take(10)->values();
 
             // Top 10 Source Country
@@ -111,11 +135,15 @@ class GenerateReport implements ShouldQueue
 
             // Top 10 Destination IP
             $destinationIpCounts = collect($traffics)->groupBy('destination_ip')->map(function ($items, $key) {
-                return [
-                    'destinationIp' => $key,
-                    'count' => $items->sum('count')
-                ];
-            });
+                // Ensure the key is a valid IP address string
+                if (filter_var($key, FILTER_VALIDATE_IP)) {
+                    return [
+                        'destinationIp' => $key,
+                        'count' => $items->sum('count')
+                    ];
+                }
+                return null;
+            })->filter(); // Remove invalid IPs
             $topDestinationIps = $destinationIpCounts->sortByDesc('count')->take(10)->values();
 
             // Top 10 Destination Country

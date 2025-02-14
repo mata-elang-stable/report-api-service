@@ -28,11 +28,11 @@ class Traffic extends Model
 
     public function sourceIdentity()
     {
-        return $this->belongsTo(Identity::class, 'source_ip', 'ip_address');
+        return $this->belongsTo(Identity::class, 'source_ip');
     }
 
     public function destinationIdentity()
     {
-        return $this->belongsTo(Identity::class, 'destination_ip', 'ip_address');
+        return $this->belongsTo(Identity::class, 'destination_ip');
     }
 }
