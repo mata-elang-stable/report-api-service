@@ -9,9 +9,9 @@ class Identity extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'ip_address';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    // protected $primaryKey = 'ip_address';
+    // public $incrementing = false;
+    // protected $keyType = 'string';
 
     protected $fillable = [
         'ip_address',
