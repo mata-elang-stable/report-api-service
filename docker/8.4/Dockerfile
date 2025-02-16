@@ -97,14 +97,15 @@ RUN apt-get update && apt-get install -y \
     libgbm-dev \
     libatk-bridge2.0-0
 
+RUN apt update && apt install -y chromium dbus-x11 libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libxcomposite1 libxrandr2 libxkbcommon-x11-0 libpangocairo-1.0-0 libgtk-3-0
+
 # Install Puppeteer globally without downloading Chromium
 RUN npm install -g puppeteer --unsafe-perm=true
 
 # Manually download the latest version of Chromium
-RUN npx puppeteer install && ls -lah $(npm root -g)/puppeteer
+RUN npx @puppeteer/browsers install chrome
 
-# Set appropriate permissions for the downloaded Chromium
-RUN chmod -R o+rx $(npm root -g)/puppeteer/.local-chromium
+RUN ln -s /var/www/html/chrome/linux-135.0.7019.0/chrome-linux64/chrome /usr/bin/chrome
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 

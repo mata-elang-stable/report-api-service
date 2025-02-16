@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Response;
 use Spatie\Browsershot\Browsershot;
+use Illuminate\Support\Facades\File;
 use Carbon\Carbon;
 
 class ReportController extends Controller
@@ -451,12 +452,26 @@ class ReportController extends Controller
             return response()->json(['message' => 'Invalid report data'], 400);
         }
 
+        $reportsPath = storage_path('app/reports');
+        if (!File::exists($reportsPath)) {
+            File::makeDirectory($reportsPath, 0755, true); // Create directory if missing
+        }
+
         $pdfPath = storage_path('app/reports/report_' . $id . '.pdf');
         $html = view('reports.alert_report', ['data' => $data])->render();
 
         Browsershot::html($html)
-        ->noSandbox()
-        ->timeout(360)
+        ->setChromePath('/usr/bin/chrome')
+        ->addChromiumArguments([
+            'no-sandbox',
+            'disable-setuid-sandbox',
+            'headless=new',
+            'disable-gpu',
+            'disable-dev-shm-usage',
+            'disable-software-rasterizer',
+            'disable-features=IsolateOrigins,site-per-process',
+            'single-process'
+        ])
         ->save($pdfPath);
 
         return Response::download($pdfPath)->deleteFileAfterSend();
