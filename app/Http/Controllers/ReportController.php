@@ -16,7 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Spatie\LaravelPdf\Facades\Pdf;
+use Illuminate\Support\Facades\Response;
 use Spatie\Browsershot\Browsershot;
 use Carbon\Carbon;
 
@@ -451,14 +451,15 @@ class ReportController extends Controller
             return response()->json(['message' => 'Invalid report data'], 400);
         }
 
-        Browsershot::html('<h1>Hello, world!</h1>')
-        ->setOption('executablePath', '/usr/bin/chromium-browser') // Use system-installed Chromium
-        ->save('output.pdf');
+        $pdfPath = storage_path('app/reports/report_' . $id . '.pdf');
+        $html = view('reports.alert_report', ['data' => $data])->render();
 
-        // return Pdf::view('reports.alert_report', ['data' => $data])
-        // ->format('a4')
-        // // ->setOption()
-        // ->save('report.pdf');
+        Browsershot::html($html)
+        ->noSandbox()
+        ->timeout(360)
+        ->save($pdfPath);
+
+        return Response::download($pdfPath)->deleteFileAfterSend();
     }
 
     public function destroy($id)

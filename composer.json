@@ -16,6 +16,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
         "livewire/livewire": "^3.5",
+        "spatie/browsershot": "^5.0",
         "spatie/laravel-pdf": "^1.5"
     },
     "require-dev": {
