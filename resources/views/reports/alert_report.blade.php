@@ -19,12 +19,12 @@
         <div class="top-row">
                 <div class="box total-events-box">
                     <h3>Total Events</h3>
-                    <p class="event-count">{{ $totalEvents }}</p>
+                    <p class="event-count">{{ $data['totalEvents'] }}</p>
                 </div>
             <div class="box priority-box">
                 <h3>Top Priority</h3>
                 <div class="priority-list">
-                    @foreach($priorityCounts as $priority => $count)
+                    @foreach($data['priorityCounts'] as $priority => $count)
                         <div class="priority-item">
                             <span class="priority-label {{ strtolower($priority) }}">{{ $priority }}</span>
                             <span class="priority-count">{{ $count }}</span>
@@ -47,7 +47,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($topAlertData as $alert)
+                        @foreach($data['topAlertData'] as $alert)
                             <tr>
                                 <td>
                                     <span class="priority-badge {{ strtolower($alert['priority']) }}">
@@ -76,7 +76,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($topSourceIps as $ip)
+                            @foreach($data['topSourceIps'] as $ip)
                                 <tr>
                                     <td class="ip-column">{{ $ip['sourceIp'] }}</td>
                                     <td class="count-column">{{ $ip['count'] }}</td>
@@ -97,7 +97,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($topSourceCountries as $country)
+                            @foreach($data['topSourceCountries'] as $country)
                                 <tr>
                                     <td>{{ $country['country'] }}</td>
                                     <td class="count-column">{{ $country['count'] }}</td>
@@ -121,7 +121,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($topDestinationIps as $ip)
+                            @foreach($data['topDestinationIps'] as $ip)
                                 <tr>
                                     <td class="ip-column">{{ $ip['destinationIp'] }}</td>
                                     <td class="count-column">{{ $ip['count'] }}</td>
@@ -142,7 +142,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($topDestinationCountries as $country)
+                            @foreach($data['topDestinationCountries'] as $country)
                                 <tr>
                                     <td>{{ $country['country'] }}</td>
                                     <td class="count-column">{{ $country['count'] }}</td>
@@ -168,7 +168,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($topSensors as $sensor)
+                            @foreach($data['topSensors'] as $sensor)
                                 <tr>
                                     <td>{{ $sensor['sensor_id'] }}</td>
                                     <td>{{ $sensor['sensor_name'] }}</td>
@@ -194,7 +194,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($topSourcePorts as $port)
+                                @foreach($data['topSourcePorts'] as $port)
                                     <tr>
                                         <td>{{ $port['sourcePort'] }}</td>
                                         <td class="count-column">{{ $port['count'] }}</td>
@@ -217,7 +217,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($topDestinationPorts as $port)
+                                @foreach($data['topDestinationPorts'] as $port)
                                     <tr>
                                         <td>{{ $port['destinationPort'] }}</td>
                                         <td class="count-column">{{ $port['count'] }}</td>
@@ -231,7 +231,7 @@
         </div>
     </div>
     <br />
-    @foreach ($sensors as $sensor)
+    @foreach ($data['sensors'] as $sensor)
     <div class="page-break">
     <div class="header">
         <img src="{{ asset('images/logo.png') }}" alt="Logo Mata Elang" class="logo">

@@ -16,7 +16,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Response;
+use Spatie\Browsershot\Browsershot;
+use Illuminate\Support\Facades\File;
 use Carbon\Carbon;
 
 class ReportController extends Controller
@@ -422,7 +424,20 @@ class ReportController extends Controller
 
         return view('dashboard', compact('reports'));
     }
+    public function viewReport($id){
+        $report = Report::find($id);
 
+        if (!$report) {
+            return response()->json(['message' => 'Report not found'], 404);
+        }
+
+        $data = is_array($report->data) ? $report->data : json_decode($report->data, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return response()->json(['message' => 'Invalid report data'], 400);
+        }
+        return view('reports.alert_report', $data);
+    }
     public function downloadReport($id)
     {
         $report = Report::find($id);
@@ -437,9 +452,29 @@ class ReportController extends Controller
             return response()->json(['message' => 'Invalid report data'], 400);
         }
 
-        $pdf = Pdf::loadView('reports.alert_report', $data);
+        $reportsPath = storage_path('app/reports');
+        if (!File::exists($reportsPath)) {
+            File::makeDirectory($reportsPath, 0755, true); // Create directory if missing
+        }
 
-        return $pdf->download('report_' . $report->id . '.pdf');
+        $pdfPath = storage_path('app/reports/report_' . $id . '.pdf');
+        $html = view('reports.alert_report', ['data' => $data])->render();
+
+        Browsershot::html($html)
+        ->setChromePath('/usr/bin/chrome')
+        ->addChromiumArguments([
+            'no-sandbox',
+            'disable-setuid-sandbox',
+            'headless=new',
+            'disable-gpu',
+            'disable-dev-shm-usage',
+            'disable-software-rasterizer',
+            'disable-features=IsolateOrigins,site-per-process',
+            'single-process'
+        ])
+        ->save($pdfPath);
+
+        return Response::download($pdfPath)->deleteFileAfterSend();
     }
 
     public function destroy($id)
