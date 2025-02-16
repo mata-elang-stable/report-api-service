@@ -16,7 +16,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Spatie\LaravelPdf\Facades\Pdf;
+use Spatie\Browsershot\Browsershot;
 use Carbon\Carbon;
 
 class ReportController extends Controller
@@ -422,7 +423,20 @@ class ReportController extends Controller
 
         return view('dashboard', compact('reports'));
     }
+    public function viewReport($id){
+        $report = Report::find($id);
 
+        if (!$report) {
+            return response()->json(['message' => 'Report not found'], 404);
+        }
+
+        $data = is_array($report->data) ? $report->data : json_decode($report->data, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return response()->json(['message' => 'Invalid report data'], 400);
+        }
+        return view('reports.alert_report', $data);
+    }
     public function downloadReport($id)
     {
         $report = Report::find($id);
@@ -437,9 +451,14 @@ class ReportController extends Controller
             return response()->json(['message' => 'Invalid report data'], 400);
         }
 
-        $pdf = Pdf::loadView('reports.alert_report', $data);
+        Browsershot::html('<h1>Hello, world!</h1>')
+        ->setOption('executablePath', '/usr/bin/chromium-browser') // Use system-installed Chromium
+        ->save('output.pdf');
 
-        return $pdf->download('report_' . $report->id . '.pdf');
+        // return Pdf::view('reports.alert_report', ['data' => $data])
+        // ->format('a4')
+        // // ->setOption()
+        // ->save('report.pdf');
     }
 
     public function destroy($id)
