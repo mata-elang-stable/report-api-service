@@ -14,3 +14,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/reports/view/{id}', [ReportController::class, 'viewReport'])->name('view.report');
     Route::delete('/reports/{id}', [ReportController::class, 'destroy'])->name('delete.report');
 });
+
+Route::get('/reports/{id}/view', [ReportController::class, 'viewReport'])
+    ->name('reports.view')
+    ->middleware('signed');
