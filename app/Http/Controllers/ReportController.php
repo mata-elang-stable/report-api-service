@@ -19,6 +19,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Response;
 use Spatie\Browsershot\Browsershot;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\URL;
 use Carbon\Carbon;
 
 class ReportController extends Controller
@@ -424,20 +425,7 @@ class ReportController extends Controller
 
         return view('dashboard', compact('reports'));
     }
-    public function viewReport($id){
-        $report = Report::find($id);
 
-        if (!$report) {
-            return response()->json(['message' => 'Report not found'], 404);
-        }
-
-        $data = is_array($report->data) ? $report->data : json_decode($report->data, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return response()->json(['message' => 'Invalid report data'], 400);
-        }
-        return view('reports.alert_report', $data);
-    }
     public function downloadReport($id)
     {
         $report = Report::find($id);
@@ -445,36 +433,44 @@ class ReportController extends Controller
         if (!$report) {
             return response()->json(['message' => 'Report not found'], 404);
         }
-
         $data = is_array($report->data) ? $report->data : json_decode($report->data, true);
-
         if (json_last_error() !== JSON_ERROR_NONE) {
             return response()->json(['message' => 'Invalid report data'], 400);
         }
 
         $reportsPath = storage_path('app/reports');
         if (!File::exists($reportsPath)) {
-            File::makeDirectory($reportsPath, 0755, true); // Create directory if missing
+            File::makeDirectory($reportsPath, 0755, true);
         }
 
         $pdfPath = storage_path('app/reports/report_' . $id . '.pdf');
-        $html = view('reports.alert_report', ['data' => $data])->render();
+        $url = URL::signedRoute('reports.view', ['id' => $id]);
 
-        Browsershot::html($html)
-        ->setChromePath('/usr/bin/chrome')
-        ->addChromiumArguments([
-            'no-sandbox',
-            'disable-setuid-sandbox',
-            'headless=new',
-            'disable-gpu',
-            'disable-dev-shm-usage',
-            'disable-software-rasterizer',
-            'disable-features=IsolateOrigins,site-per-process',
-            'single-process'
-        ])
-        ->save($pdfPath);
+        Browsershot::url($url)
+            ->setRemoteInstance('192.168.0.100', '9222')
+            ->waitUntilNetworkIdle()
+            ->format('A4')
+            ->showBackground()
+            ->savePdf($pdfPath);
 
         return Response::download($pdfPath)->deleteFileAfterSend();
+    }
+
+    public function viewReport($id)
+    {
+        $report = Report::find($id);
+
+        if (!$report) {
+            abort(404, 'Report not found');
+        }
+
+        $data = is_array($report->data) ? $report->data : json_decode($report->data, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            abort(400, 'Invalid report data');
+        }
+
+        return view('reports.alert_report', ['data' => $data]);
     }
 
     public function destroy($id)
