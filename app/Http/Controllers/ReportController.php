@@ -450,10 +450,8 @@ class ReportController extends Controller
         $chromiumPort = env('CHROMIUM_PORT');
 
         Browsershot::url($url)
-            ->setRemoteInstance($chromiumIpAddress, $chromiumPort)
+            ->setRemoteInstance('192.168.0.100', '9222')
             ->waitUntilNetworkIdle()
-            ->showBrowserHeaderAndFooter()
-            ->headerHtml($headerHtml)
             ->format('A4')
             ->showBackground()
             ->savePdf($pdfPath);
