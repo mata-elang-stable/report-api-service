@@ -16,6 +16,13 @@ return new class extends Migration
             $table->string('name');
             $table->timestamps();
         });
+
+        DB::table('priorities')->insert([
+            ['id' => 1, 'name' => 'High'],
+            ['id' => 2, 'name' => 'Medium'],
+            ['id' => 3, 'name' => 'Low'],
+            ['id' => 4, 'name' => 'Informational'],
+        ]);
     }
 
     /**
