@@ -2,7 +2,8 @@
     <x-authentication-card>
         <x-slot name="logo">
             {{-- <x-authentication-card-logo /> --}}
-            <img src={{ asset('images/logo.png') }} alt="Logo" class="logo" width="125" height="125">
+            <img src={{ asset('images/logo.png') }} alt="Logo" class="logo mx-auto" width="125" height="125">
+            <livewire:login-label text="Mata Elang Report Service" />
         </x-slot>
 
         <x-validation-errors class="mb-4" />
