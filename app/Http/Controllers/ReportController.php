@@ -445,10 +445,15 @@ class ReportController extends Controller
 
         $pdfPath = storage_path('app/reports/report_' . $id . '.pdf');
         $url = URL::signedRoute('reports.view', ['id' => $id]);
+        $headerHtml = view('reports.alert_report_header')->render();
+        $chromiumIpAddress = env('CHROMIUM_IP_ADDRESS');
+        $chromiumPort = env('CHROMIUM_PORT');
 
         Browsershot::url($url)
-            ->setRemoteInstance('192.168.0.100', '9222')
+            ->setRemoteInstance($chromiumIpAddress, $chromiumPort)
             ->waitUntilNetworkIdle()
+            ->showBrowserHeaderAndFooter()
+            ->headerHtml($headerHtml)
             ->format('A4')
             ->showBackground()
             ->savePdf($pdfPath);
@@ -491,8 +496,9 @@ class ReportController extends Controller
 
     private function createOrUpdateIdentity($ipAddress): Identity
     {
+        $lookupUrl = env('LOOKUP_URL');
         if (!empty($ipAddress)) {
-            $response = Http::get('http://192.168.0.100:3080/lookup', ['ip' => $ipAddress]);
+            $response = Http::get($lookupUrl, ['ip' => $ipAddress]);
 
             if ($response->successful()) {
                 $data = $response->json();
