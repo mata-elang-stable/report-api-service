@@ -17,8 +17,6 @@ RUN apk add --no-cache \
     git \
     nodejs \
     npm \
-    chromium \
-    chromium-chromedriver \
     xvfb
 
 # Install PHP extensions (INCLUDING POSTGRESQL)
