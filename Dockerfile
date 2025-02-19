@@ -17,6 +17,7 @@ RUN apk add --no-cache \
     git \
     nodejs \
     npm \
+    supervisor \
     xvfb
 
 # Install PHP extensions (INCLUDING POSTGRESQL)
@@ -25,8 +26,17 @@ RUN docker-php-ext-install pdo pdo_pgsql pgsql opcache gd
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Use the default production configuration
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+
 # Copy Laravel files
 COPY . .
+COPY supervisord.conf /etc/supervisord.conf
+COPY cronjob.conf /etc/cron.d/cronjob.conf
+
+RUN chmod 0644 /etc/cron.d/cronjob.conf
+
+RUN chmod +x ./startup.sh
 
 # Install dependencies
 RUN composer install --no-dev --optimize-autoloader
@@ -44,6 +54,4 @@ RUN npm instal && npm run build
 # Expose port for PHP-FPM
 EXPOSE 9000
 
-# Start PHP-FPM
-CMD ["/bin/sh", "-c", "php artisan migrate --force && php-fpm"]
-
+ENTRYPOINT [ "/var/www/html/startup.sh" ]
