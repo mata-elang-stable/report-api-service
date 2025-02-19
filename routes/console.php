@@ -7,10 +7,6 @@ use App\Jobs\GenerateQuarterlyReport;
 use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Facades\Log;
 
-Schedule::job(new GenerateDailyReport)->everyMinute()->onSuccess(function () {
-    Log::info('GenerateDailyReport job dispatched successfully at ' . now());
-});
-
 Schedule::job(new GenerateDailyReport)->dailyAt('00:00')->onSuccess(function () {
     Log::info('GenerateDailyReport job dispatched successfully at ' . now());
 });
