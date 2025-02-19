@@ -455,12 +455,12 @@ class ReportController extends Controller
 
         $pdfPath = storage_path('app/reports/report_' . $id . '.pdf');
         $url = URL::signedRoute('reports.view', ['id' => $id]);
-        $headerHtml = view('reports.alert_report_header')->render();
+        // $headerHtml = view('reports.alert_report_header')->render();
         $chromiumIpAddress = env('CHROMIUM_IP_ADDRESS');
         $chromiumPort = env('CHROMIUM_PORT');
 
         Browsershot::url($url)
-            ->setRemoteInstance('192.168.0.100', '9222')
+            ->setRemoteInstance($chromiumIpAddress, $chromiumPort)
             ->waitUntilNetworkIdle()
             ->format('A4')
             ->showBackground()
