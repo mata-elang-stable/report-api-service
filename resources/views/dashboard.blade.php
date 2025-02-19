@@ -9,11 +9,14 @@
             <div class="md:col-span-1">
                 <div class="bg-white dark:bg-gray-800 shadow-xl rounded-lg p-6">
                     <h3 class="text-lg font-bold mb-4 text-gray-800 dark:text-gray-100">
-                        Generate Manual Report
+                        Generate Today Report
                     </h3>
-                    <button class="w-full inline-flex items-center justify-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring focus:ring-indigo-200 disabled:opacity-25 transition">
-                        Generate Report
-                    </button>
+                    <form action="{{ route('generate.report') }}" method="GET">
+                        @csrf
+                        <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-500 active:bg-indigo-700 focus:outline-none focus:ring focus:ring-indigo-200 disabled:opacity-25 transition">
+                            Generate Report
+                        </button>
+                    </form>
                 </div>
             </div>
             <div class="md:col-span-2">

@@ -186,14 +186,14 @@ class ReportController extends Controller
     {
         try {
             $alertMetrics = AlertMetric::with('alertMessage.classification.priority')
-                ->whereBetween('timestamp', [Carbon::now()->subMonth(), Carbon::now()])
+                ->whereBetween('timestamp', [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()])
                 ->get();
             $sensorMetrics = SensorMetric::with('sensor')
-                ->whereBetween('timestamp', [Carbon::now()->subMonth(), Carbon::now()])
+                ->whereBetween('timestamp', [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()])
                 ->get();
             $priorities = Priority::all()->pluck('id', 'name')->toArray();
             $traffics = Traffic::with('sourceIdentity', 'destinationIdentity')
-                ->whereBetween('timestamp', [Carbon::now()->subMonth(), Carbon::now()])
+                ->whereBetween('timestamp', [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()])
                 ->get();
             $sensors = Sensor::all();
             $totalEvents = 0;
@@ -210,11 +210,7 @@ class ReportController extends Controller
                 }
                 $priorityCounts[$priorityName] += $alertMetric->count;
             }
-
-            // Sort priorities by count in descending order and take top 10
-            $priorityCounts = collect($priorityCounts)->sortByDesc(function ($count, $priority) {
-                return $count;
-            })->take(10)->toArray();
+            $priorityCounts = collect($priorityCounts)->sortByDesc(fn($count) => $count)->take(10)->toArray();
 
             // Top 10 Alert
             $groupedAlertMetrics = $alertMetrics->groupBy(function ($alertMetric) {
@@ -230,8 +226,6 @@ class ReportController extends Controller
                     'count' => $group->sum('count'),
                 ];
             });
-
-            // Sort grouped alert metrics by priority and count
             $sortedAlertMetrics = $groupedAlertMetrics->sort(function ($a, $b) use ($priorities) {
                 $priorityA = $priorities[$a['priority']] ?? 999;
                 $priorityB = $priorities[$b['priority']] ?? 999;
@@ -240,7 +234,6 @@ class ReportController extends Controller
                 }
                 return $priorityA <=> $priorityB;
             });
-
             $topAlertData = $sortedAlertMetrics->take(10)->values();
 
             // Top 10 Source IP
@@ -253,14 +246,13 @@ class ReportController extends Controller
             $topSourceIps = $sourceIpCounts->sortByDesc('count')->take(10)->values();
 
             // Top 10 Source Country
-            $sourceCountryCounts = collect($traffics)->groupBy(function ($item) {
-                return $item->sourceIdentity->country_name ?? 'Unknown';
-            })->map(function ($items, $key) {
-                return [
-                    'country' => $key,
-                    'count' => $items->sum('count')
-                ];
-            });
+            $sourceCountryCounts = collect($traffics)->groupBy(fn($item) => $item->sourceIdentity->country_name ?? 'Unknown')
+                ->map(function ($items, $key) {
+                    return [
+                        'country' => $key,
+                        'count' => $items->sum('count')
+                    ];
+                });
             $topSourceCountries = $sourceCountryCounts->sortByDesc('count')->take(10)->values();
 
             // Top 10 Destination IP
@@ -273,14 +265,13 @@ class ReportController extends Controller
             $topDestinationIps = $destinationIpCounts->sortByDesc('count')->take(10)->values();
 
             // Top 10 Destination Country
-            $destinationCountryCounts = collect($traffics)->groupBy(function ($item) {
-                return $item->destinationIdentity->country_name ?? 'Unknown';
-            })->map(function ($items, $key) {
-                return [
-                    'country' => $key,
-                    'count' => $items->sum('count')
-                ];
-            });
+            $destinationCountryCounts = collect($traffics)->groupBy(fn($item) => $item->destinationIdentity->country_name ?? 'Unknown')
+                ->map(function ($items, $key) {
+                    return [
+                        'country' => $key,
+                        'count' => $items->sum('count')
+                    ];
+                });
             $topDestinationCountries = $destinationCountryCounts->sortByDesc('count')->take(10)->values();
 
             // Aggregate counts by sensor
@@ -324,19 +315,21 @@ class ReportController extends Controller
                     }
                 }
                 $sensor->priorityCounts = $priorityCountsSensor;
-                $groupedAlertMetrics = $alertMetrics->where('sensor_id', $sensor->id)->groupBy(function ($alertMetric) {
-                    return $alertMetric->alertMessage->classification->priority->name . '|' .
-                        $alertMetric->alertMessage->classification . '|' .
-                        $alertMetric->alertMessage->alert_message;
-                })->map(function ($group) {
-                    $first = $group->first();
-                    return [
-                        'priority' => $first->alertMessage->classification->priority->name,
-                        'classification' => $first->alertMessage->classification->classification,
-                        'message' => $first->alertMessage->alert_message,
-                        'count' => $group->sum('count'),
-                    ];
-                });
+
+                $groupedAlertMetrics = $alertMetrics->where('sensor_id', $sensor->id)
+                    ->groupBy(function ($alertMetric) {
+                        return $alertMetric->alertMessage->classification->priority->name . '|' .
+                            $alertMetric->alertMessage->classification . '|' .
+                            $alertMetric->alertMessage->alert_message;
+                    })->map(function ($group) {
+                        $first = $group->first();
+                        return [
+                            'priority' => $first->alertMessage->classification->priority->name,
+                            'classification' => $first->alertMessage->classification->classification,
+                            'message' => $first->alertMessage->alert_message,
+                            'count' => $group->sum('count'),
+                        ];
+                    });
                 $sortedAlertMetrics = $groupedAlertMetrics->sort(function ($a, $b) use ($priorities) {
                     $priorityA = $priorities[$a['priority']] ?? 999;
                     $priorityB = $priorities[$b['priority']] ?? 999;
@@ -346,51 +339,61 @@ class ReportController extends Controller
                     return $priorityA <=> $priorityB;
                 });
                 $sensor->topAlertData = $sortedAlertMetrics->take(10)->values();
-                $sourceIpCounts = collect($traffics)->where('sensor_id', $sensor->id)->groupBy('source_ip')->map(function ($items, $key) {
-                    return [
-                        'sourceIp' => $key,
-                        'count' => $items->sum('count')
-                    ];
-                });
+
+                $sourceIpCounts = collect($traffics)->where('sensor_id', $sensor->id)
+                    ->groupBy('source_ip')->map(function ($items, $key) {
+                        return [
+                            'sourceIp' => $key,
+                            'count' => $items->sum('count')
+                        ];
+                    });
                 $sensor->topSourceIps = $sourceIpCounts->sortByDesc('count')->take(10)->values();
-                $sourceCountryCounts = collect($traffics)->where('sensor_id', $sensor->id)->groupBy(function ($item) {
-                    return $item->sourceIdentity->country_name ?? 'Unknown';
-                })->map(function ($items, $key) {
-                    return [
-                        'country' => $key,
-                        'count' => $items->sum('count')
-                    ];
-                });
+
+                $sourceCountryCounts = collect($traffics)->where('sensor_id', $sensor->id)
+                    ->groupBy(fn($item) => $item->sourceIdentity->country_name ?? 'Unknown')
+                    ->map(function ($items, $key) {
+                        return [
+                            'country' => $key,
+                            'count' => $items->sum('count')
+                        ];
+                    });
                 $sensor->topSourceCountries = $sourceCountryCounts->sortByDesc('count')->take(10)->values();
-                $destinationIpCounts = collect($traffics)->where('sensor_id', $sensor->id)->groupBy('destination_ip')->map(function ($items, $key) {
-                    return [
-                        'destinationIp' => $key,
-                        'count' => $items->sum('count')
-                    ];
-                });
+
+                $destinationIpCounts = collect($traffics)->where('sensor_id', $sensor->id)
+                    ->groupBy('destination_ip')->map(function ($items, $key) {
+                        return [
+                            'destinationIp' => $key,
+                            'count' => $items->sum('count')
+                        ];
+                    });
                 $sensor->topDestinationIps = $destinationIpCounts->sortByDesc('count')->take(10)->values();
-                $destinationCountryCounts = collect($traffics)->where('sensor_id', $sensor->id)->groupBy(function ($item) {
-                    return $item->destinationIdentity->country_name ?? 'Unknown';
-                })->map(function ($items, $key) {
-                    return [
-                        'country' => $key,
-                        'count' => $items->sum('count')
-                    ];
-                });
+
+                $destinationCountryCounts = collect($traffics)->where('sensor_id', $sensor->id)
+                    ->groupBy(fn($item) => $item->destinationIdentity->country_name ?? 'Unknown')
+                    ->map(function ($items, $key) {
+                        return [
+                            'country' => $key,
+                            'count' => $items->sum('count')
+                        ];
+                    });
                 $sensor->topDestinationCountries = $destinationCountryCounts->sortByDesc('count')->take(10)->values();
-                $sourcePortCounts = collect($traffics)->where('sensor_id', $sensor->id)->groupBy('source_port')->map(function ($items, $key) {
-                    return [
-                        'sourcePort' => $key,
-                        'count' => $items->sum('count')
-                    ];
-                });
+
+                $sourcePortCounts = collect($traffics)->where('sensor_id', $sensor->id)
+                    ->groupBy('source_port')->map(function ($items, $key) {
+                        return [
+                            'sourcePort' => $key,
+                            'count' => $items->sum('count')
+                        ];
+                    });
                 $sensor->topSourcePorts = $sourcePortCounts->sortByDesc('count')->take(10)->values();
-                $destinationPortCounts = collect($traffics)->where('sensor_id', $sensor->id)->groupBy('destination_port')->map(function ($items, $key) {
-                    return [
-                        'destinationPort' => $key,
-                        'count' => $items->sum('count')
-                    ];
-                });
+
+                $destinationPortCounts = collect($traffics)->where('sensor_id', $sensor->id)
+                    ->groupBy('destination_port')->map(function ($items, $key) {
+                        return [
+                            'destinationPort' => $key,
+                            'count' => $items->sum('count')
+                        ];
+                    });
                 $sensor->topDestinationPorts = $destinationPortCounts->sortByDesc('count')->take(10)->values();
             };
 
@@ -411,13 +414,18 @@ class ReportController extends Controller
             ];
 
             Report::query()->create([
-                'template_id' => 'generate_report',
+                'template_id' => 'today_report',
                 'data' => $data,
             ]);
 
             Log::info('Report generated');
+            session()->flash('message', 'Report generated successfully');
+
+            return redirect()->route('dashboard');
         } catch (\Exception $e) {
-            Log::error('Error generating report: ' . $e);
+            Log::error('Error generating report: ' . $e->getMessage());
+            session()->flash('error', 'An error occurred while generating the report.');
+            return redirect()->route('dashboard');
         }
     }
 

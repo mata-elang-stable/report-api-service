@@ -4,6 +4,7 @@
         margin: 20px;
         background-color: white;
     }
+
     hr {
         display: block;
         height: 1px;
@@ -47,7 +48,6 @@
         gap: 15px;
     }
 
-    /* Box Styles */
     .box, .middle-row {
         border: 1px solid #ccc;
         border-radius: 2px;
@@ -55,7 +55,6 @@
         background-color: white;
     }
 
-    /* Total Events Box */
     .box h3 {
         margin-top: 0;
         margin-bottom: 15px;
@@ -247,15 +246,13 @@
     }
 
     .ip-table .ip-column {
-        font-family: monospace; /* For better IP address alignment */
+        font-family: monospace;
     }
 
-    /* Hover effect */
     .ip-table tbody tr:hover {
         background-color: #f8f9fa;
     }
 
-    /* Print styles */
     @media print {
         .source-ip-box {
             break-inside: avoid;
@@ -270,7 +267,6 @@
         }
     }
 
-    /* Bottom grid layout */
     .bottom-grid {
         display: grid;
         grid-template-columns: 2fr 1fr; /* 2/3 for IP, 1/3 for Country */
