@@ -25,29 +25,29 @@ services:
             - pgsql
             - redis
 
-    report-api:
-        image: ghcr.io/mata-elang-stable/report-api-services:latest
-        build: .
-        depends_on:
-        - pgsql
-        - web
-        - redis
-        - chromium
-        env_file:
-            - .env
-        volumes:
-            - report_data:/var/www/html/
-        deploy:
-        restart_policy:
-            condition: on-failure
-            delay: 15s
-        mode: replicated
-        replicas: 1
-        resources:
-            limits:
-            cpus: "0.5"
-            memory: 1G
-            
+    # report-api:
+    #     image: ghcr.io/mata-elang-stable/report-api-services:latest
+    #     build: .
+    #     depends_on:
+    #     - pgsql
+    #     - web
+    #     - redis
+    #     - chromium
+    #     env_file:
+    #         - .env
+    #     volumes:
+    #         - report_data:/var/www/html/
+    #     deploy:
+    #     restart_policy:
+    #         condition: on-failure
+    #         delay: 15s
+    #     mode: replicated
+    #     replicas: 1
+    #     resources:
+    #         limits:
+    #         cpus: "0.5"
+    #         memory: 1G
+
     web:
         image: nginx:alpine
         restart: unless-stopped
