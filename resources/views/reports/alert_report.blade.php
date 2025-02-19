@@ -6,7 +6,7 @@
 </head>
 <body>
     <div class="header">
-        {{-- <img src="{{ asset('images/logo.png') }}" alt="Logo Mata Elang" class="logo"> --}}
+        <img src="{{ asset('images/logo.png') }}" alt="Logo Mata Elang" class="logo">
         {{-- <img src="https://drive.fadhilyori.my.id/s/yBQ7YCercsaHNEq/download/mata-elang-csrg-logo.png" alt="Logo" class="logo"> --}}
         <div class="title-section">
             <h1 class="title">Mata Elang Report</h1>
@@ -15,19 +15,20 @@
         </div>
     </div>
     <hr/>
+
     <div class="grid-container">
         <div class="top-row">
                 <div class="box total-events-box">
-                    <h3>Total Events</h3>
+                    <h3 class="card-label">Total Events</h3>
                     <p class="event-count">{{ $data['totalEvents'] }}</p>
                 </div>
             <div class="box priority-box">
                 <h3>Top Priority</h3>
                 <div class="priority-list">
-                    @foreach($data['priorityCounts'] as $priority => $count)
+                    @foreach(['Critical', 'High', 'Medium', 'Low'] as $priority)
                         <div class="priority-item">
                             <span class="priority-label {{ strtolower($priority) }}">{{ $priority }}</span>
-                            <span class="priority-count">{{ $count }}</span>
+                            <span class="priority-count">{{ $data['priorityCounts'][$priority] ?? 0 }}</span>
                         </div>
                     @endforeach
                 </div>
@@ -50,7 +51,7 @@
                         @foreach($data['topAlertData'] as $alert)
                             <tr>
                                 <td>
-                                    <span class="priority-badge {{ strtolower($alert['priority']) }}">
+                                    <span class="priority-label {{ strtolower($alert['priority']) }}">
                                         {{ $alert['priority'] }}
                                     </span>
                                 </td>

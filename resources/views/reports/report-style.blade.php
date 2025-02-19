@@ -62,7 +62,11 @@
         font-size: 16px;
     }
 
-    /* Priority Box */
+    .card-label {
+        font-size: 14px;
+        font-weight: bold;
+    }
+
     .priority-item {
         display: flex;
         justify-content: space-between;
@@ -78,8 +82,16 @@
         font-size: 12px;
     }
 
+    .priority-label.critical {
+        background-color: #6813b8;
+    }
+
     .priority-label.high {
         background-color: #dc3545;
+    }
+
+    .priority-label.medium {
+        background-color: #dc8635;
     }
 
     .priority-label.low {
@@ -120,33 +132,17 @@
         font-size: 12px;
     }
 
-    .total-events-box {
-        display: flex;
-        flex-direction: column;
-        height: 90%;
-        padding: 15px;
-        text-align: center;
-    }
-
-    .total-events-box h3 {
-        margin: 0;
-        margin-bottom: 10px;
-        font-size: 16px;
-    }
-
     .total-events-box .event-count {
-        /* Take up remaining space and center the number vertically */
         flex: 1;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 48px;
         font-weight: bold;
-        margin: 0;
+        margin-top: 25px;
         line-height: 1;
     }
 
-    /* Force background printing */
     * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
@@ -154,6 +150,11 @@
 
     /* Specific print styles */
     @media print {
+        .priority-label.critical,
+        .priority-badge.critical {
+            background-color: #6813b8; !important;
+            color: white !important;
+        }
         .priority-label.high,
         .priority-badge.high {
             background-color: #dc3545 !important;
@@ -259,11 +260,11 @@
         .source-ip-box {
             break-inside: avoid;
         }
-        
+
         .ip-table {
             break-inside: auto;
         }
-        
+
         .ip-table tr {
             break-inside: avoid;
         }
@@ -345,7 +346,7 @@
         .bottom-grid {
             break-inside: avoid;
         }
-        
+
         .box {
             break-inside: avoid;
         }
@@ -432,7 +433,7 @@
         .ports-grid {
             break-inside: avoid;
         }
-        
+
         .box {
             break-inside: avoid;
         }

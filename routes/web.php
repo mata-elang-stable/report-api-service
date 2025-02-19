@@ -16,5 +16,4 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
 });
 
 Route::get('/reports/{id}/view', [ReportController::class, 'viewReport'])
-    ->name('reports.view')
-    ->middleware('signed');
+    ->name('reports.view');

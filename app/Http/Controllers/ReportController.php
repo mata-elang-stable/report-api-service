@@ -31,6 +31,7 @@ class ReportController extends Controller
      */
     public function getReport(Request $request): JsonResponse
     {
+        Log::info('Request' . $request);
         $rawJson = $request->getContent();
         $event = json_decode($rawJson, true);
 
@@ -66,6 +67,7 @@ class ReportController extends Controller
             Log::error('Invalid snort priority', ['priority' => $event['snort_priority']]);
             return response()->json(['error' => 'Invalid snort priority'], 400);
         }
+        Log::info('Priority:', ['priority' => $priority]);
 
         $classification = Classification::firstOrCreate(
             [
@@ -495,30 +497,32 @@ class ReportController extends Controller
     private function createOrUpdateIdentity($ipAddress): Identity
     {
         $lookupUrl = env('LOOKUP_URL');
-        if (!empty($ipAddress)) {
-            $response = Http::get($lookupUrl, ['ip' => $ipAddress]);
 
-            if ($response->successful()) {
-                $data = $response->json();
-                $country = $data['region']['country']['names']['en'] ?? 'Unknown';
-            } else {
-                $country = 'Unknown';
+        $country = 'Undefined';
+
+        if (!empty($ipAddress)) {
+            if (!empty($lookupUrl)) {
+                $response = Http::get($lookupUrl, ['ip' => $ipAddress]);
+                Log::info('Lookup response:', ['response' => $response]);
+                if ($response->successful()) {
+                    $data = $response->json();
+                    // If country name is empty, default to "Undefined"
+                    $countryLookup = $data['region']['country']['names']['en'] ?? '';
+                    $country = empty($countryLookup) ? 'Undefined' : $countryLookup;
+                }
             }
 
             $identity = Identity::firstOrCreate(
+                ['ip_address' => $ipAddress],
                 [
-                    'ip_address' => $ipAddress,
-                    'country_name' => $country,
-                ],
-                [
-                    'ip_address' => $ipAddress,
+                    'ip_address'   => $ipAddress,
                     'country_name' => $country,
                 ]
             );
-
+            return $identity;
         }
 
-        return $identity;
+        throw new \InvalidArgumentException("IP address is required");
     }
 }
 
