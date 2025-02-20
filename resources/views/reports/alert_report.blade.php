@@ -7,7 +7,6 @@
 <body>
     <div class="header">
         <img src="{{ asset('images/logo.png') }}" alt="Logo Mata Elang" class="logo">
-        {{-- <img src="https://drive.fadhilyori.my.id/s/yBQ7YCercsaHNEq/download/mata-elang-csrg-logo.png" alt="Logo" class="logo"> --}}
         <div class="title-section">
             <h1 class="title">Mata Elang Report</h1>
             <p class="subtitle">Generated on {{ now()->format('D, j M Y H:i:s') }}</p>
@@ -236,7 +235,6 @@
     <div class="page-break">
     <div class="header">
         <img src="{{ asset('images/logo.png') }}" alt="Logo Mata Elang" class="logo">
-        {{-- <img src="https://media.istockphoto.com/id/1179883860/id/vektor/logo-mata.jpg?s=612x612&w=0&k=20&c=FRVESMKXEo77SOvFaNllZWGi-uKXTav210TJcODM2XI=" alt="Logo" class="logo"> --}}
         <div class="title-section">
             <h1 class="title">Mata Elang Report</h1>
             <p class="subtitle">Generated on {{ now()->format('D, j M Y H:i:s') }}</p>
@@ -256,10 +254,10 @@
             <div class="box priority-box">
                 <h3>Top Priority</h3>
                 <div class="priority-list">
-                    @foreach($sensor['priorityCounts'] as $priority => $count)
+                    @foreach(['Critical', 'High', 'Medium', 'Low'] as $priority)
                         <div class="priority-item">
                             <span class="priority-label {{ strtolower($priority) }}">{{ $priority }}</span>
-                            <span class="priority-count">{{ $count }}</span>
+                            <span class="priority-count">{{ $sensor['priorityCounts'][$priority] ?? 0 }}</span>
                         </div>
                     @endforeach
                 </div>
@@ -282,7 +280,7 @@
                         @foreach($sensor['topAlertData'] as $alert)
                             <tr>
                                 <td>
-                                    <span class="priority-badge {{ strtolower($alert['priority']) }}">
+                                    <span class="priority-label {{ strtolower($alert['priority']) }}">
                                         {{ $alert['priority'] }}
                                     </span>
                                 </td>
