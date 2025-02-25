@@ -21,6 +21,7 @@ use Spatie\Browsershot\Browsershot;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\URL;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Config;
 
 class ReportController extends Controller
 {
@@ -456,11 +457,12 @@ class ReportController extends Controller
         $pdfPath = storage_path('app/reports/report_' . $id . '.pdf');
         $url = URL::signedRoute('reports.view', ['id' => $id]);
         // $headerHtml = view('reports.alert_report_header')->render();
-        $chromiumIpAddress = env('CHROMIUM_IP_ADDRESS');
-        $chromiumPort = env('CHROMIUM_PORT');
 
         Browsershot::url($url)
-            ->setRemoteInstance($chromiumIpAddress, $chromiumPort)
+            ->setRemoteInstance(
+                Config::get('app.chromium.address'),
+                Config::get('app.chromium.port'),
+            )
             ->waitUntilNetworkIdle()
             ->format('A4')
             ->showBackground()
@@ -533,4 +535,3 @@ class ReportController extends Controller
         throw new \InvalidArgumentException("IP address is required");
     }
 }
-
