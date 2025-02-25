@@ -122,6 +122,11 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
-    
+
+
+    'chromium' => [
+        'address' => env('CHROMIUM_IP_ADDRESS', "localhost"),
+        'port' => env('CHROMIUM_PORT', 9222),
+    ],
 
 ];
